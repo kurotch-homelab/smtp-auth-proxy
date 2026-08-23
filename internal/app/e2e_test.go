@@ -81,6 +81,7 @@ func setup(t *testing.T) *environment {
 	cfg.Upstream.SMTP.Port = exchange.Port()
 	cfg.Upstream.OAuth.Authority = entra.URL
 	cfg.Upstream.TLS.CAFile = caPath
+	cfg.Admin.Address = "127.0.0.1:0"
 	cfg.Queue.PollInterval = config.Duration(20 * time.Millisecond)
 	// Delivery is paced to Exchange's real budget; the test sends one message.
 	cfg.Queue.Retry.Backoff = []config.Duration{config.Duration(10 * time.Millisecond)}

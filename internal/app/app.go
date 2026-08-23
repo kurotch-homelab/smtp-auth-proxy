@@ -8,14 +8,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminapi"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminauth"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/config"
 	appcrypto "github.com/kurotch-homelab/smtp-auth-proxy/internal/crypto"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/metrics"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/oauth"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/queue"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/smtpsrv"
@@ -34,8 +38,12 @@ type App struct {
 	db      *store.DB
 	keyring *appcrypto.Keyring
 	tokens  *oauth.Provider
+	metrics *metrics.Metrics
 	smtp    *smtpsrv.Server
 	queue   *queue.Runner
+	admin   *adminapi.Server
+	// adminServer is the HTTP server for the management interface.
+	adminServer *http.Server
 }
 
 // New builds an App from a validated configuration. It opens the database and
@@ -72,7 +80,10 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		}
 	}
 
-	app := &App{cfg: cfg, log: log, db: db, keyring: keyring}
+	app := &App{cfg: cfg, log: log, db: db, keyring: keyring, metrics: metrics.New()}
+	// Publish every known series at zero, so an alerting rule works before the
+	// first failure rather than after it.
+	app.metrics.Init([]string{string(store.TransportSMTP), string(store.TransportGraph)})
 
 	if err := app.buildTokenProvider(); err != nil {
 		_ = db.Close()
@@ -86,8 +97,100 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		_ = db.Close()
 		return nil, err
 	}
+	if err := app.buildAdmin(ctx); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 
 	return app, nil
+}
+
+// buildAdmin assembles the management interface.
+func (a *App) buildAdmin(ctx context.Context) error {
+	sessions := adminauth.NewSessionManager(a.db, adminauth.SessionConfig{
+		CookieName:  a.cfg.Admin.Session.CookieName,
+		Lifetime:    a.cfg.Admin.Session.Lifetime.Duration(),
+		IdleTimeout: a.cfg.Admin.Session.IdleTimeout.Duration(),
+		Secure:      a.cookieSecure(),
+	})
+
+	var local *adminauth.LocalAuthenticator
+	if a.cfg.Admin.Local.Enabled {
+		local = adminauth.NewLocalAuthenticator(a.db, adminauth.LocalConfig{
+			Enabled:          true,
+			LockoutThreshold: a.cfg.Admin.Local.Lockout.Threshold,
+			LockoutDuration:  a.cfg.Admin.Local.Lockout.Duration.Duration(),
+		}, a.log)
+	}
+
+	oidcClient := &http.Client{Timeout: 30 * time.Second}
+	oidcAuth, err := adminauth.NewOIDCAuthenticator(ctx, adminauth.OIDCConfig{
+		Enabled:       a.cfg.Admin.OIDC.Enabled,
+		Issuer:        a.cfg.Admin.OIDC.Issuer,
+		ClientID:      a.cfg.Admin.OIDC.ClientID,
+		ClientSecret:  a.cfg.Admin.OIDC.ClientSecret,
+		Scopes:        a.cfg.Admin.OIDC.Scopes,
+		BaseURL:       a.cfg.Admin.BaseURL,
+		UsernameClaim: a.cfg.Admin.OIDC.UsernameClaim,
+		RoleClaim:     a.cfg.Admin.OIDC.RoleClaim,
+		RoleMappings:  a.cfg.Admin.OIDC.RoleMappings,
+		DefaultRole:   a.cfg.Admin.OIDC.DefaultRole,
+		AllowSignup:   a.cfg.Admin.OIDC.AllowSignup,
+	}, a.db, oidcClient, a.log)
+	if err != nil {
+		return err
+	}
+
+	admin, err := adminapi.New(adminapi.Options{
+		DB:             a.db,
+		Keyring:        a.keyring,
+		Sessions:       sessions,
+		Local:          local,
+		OIDC:           oidcAuth,
+		OIDCClient:     oidcClient,
+		Tokens:         a.tokens,
+		SMTPScope:      a.cfg.Upstream.OAuth.SMTPScope,
+		GraphScope:     a.cfg.Upstream.OAuth.GraphScope,
+		TrustedProxies: a.cfg.Admin.TrustedProxies,
+		CookieSecure:   a.cookieSecure(),
+		MetricsEnabled: a.cfg.Admin.Metrics.Enabled,
+		MetricsPath:    a.cfg.Admin.Metrics.Path,
+		Metrics:        a.metrics,
+		ServeUI:        true,
+		Log:            a.log,
+	})
+	if err != nil {
+		return err
+	}
+
+	a.admin = admin
+	a.adminServer = &http.Server{
+		Addr:    a.cfg.Admin.Address,
+		Handler: admin,
+		// The admin interface is behind a session; these bound how long a slow
+		// or stalled client can hold a connection.
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      120 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		ErrorLog:          slog.NewLogLogger(a.log.Handler(), slog.LevelWarn),
+	}
+	return nil
+}
+
+// cookieSecure resolves the "auto" setting: a deployment reachable over https
+// gets Secure cookies, and one that is not cannot have them without breaking
+// sign-in entirely.
+func (a *App) cookieSecure() bool {
+	switch a.cfg.Admin.Session.CookieSecure {
+	case "true":
+		return true
+	case "false":
+		return false
+	default:
+		return strings.HasPrefix(a.cfg.Admin.BaseURL, "https://") ||
+			a.cfg.Admin.TLS.CertFile != ""
+	}
 }
 
 func (a *App) buildTokenProvider() error {
@@ -151,6 +254,7 @@ func (a *App) buildSMTPServer() error {
 		ProxyProtocol:       a.cfg.SMTP.ProxyProtocol,
 		Auth:                &authenticator{db: a.db, log: a.log},
 		Submitter:           &submitter{db: a.db, log: a.log},
+		Recorder:            recorder{m: a.metrics},
 		Log:                 a.log,
 	})
 	if err != nil {
@@ -241,6 +345,7 @@ func (a *App) buildQueue() error {
 		RetainFailed:  a.cfg.Queue.Retention.Failed.Duration(),
 		PurgeInterval: a.cfg.Queue.Retention.PurgeInterval.Duration(),
 		WorkerID:      workerID(),
+		Recorder:      recorder{m: a.metrics},
 		Log:           a.log,
 	})
 	if err != nil {
@@ -311,12 +416,61 @@ func (a *App) Run(ctx context.Context) error {
 		record(a.queue.Run(runCtx))
 	}()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+		record(a.serveAdmin(runCtx))
+	}()
+
 	<-runCtx.Done()
 
 	a.log.Info("shutting down")
 	wg.Wait()
 	return firstErr
 }
+
+// serveAdmin runs the management interface until ctx is done.
+func (a *App) serveAdmin(ctx context.Context) error {
+	var lc net.ListenConfig
+	listener, err := lc.Listen(ctx, "tcp", a.cfg.Admin.Address)
+	if err != nil {
+		return fmt.Errorf("app: binding the admin interface on %s: %w", a.cfg.Admin.Address, err)
+	}
+
+	a.log.Info("admin interface started",
+		"address", listener.Addr().String(),
+		"tls", a.cfg.Admin.TLS.CertFile != "",
+		"metrics", a.cfg.Admin.Metrics.Enabled)
+
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), adminGracePeriod)
+			defer cancel()
+			_ = a.adminServer.Shutdown(shutdownCtx)
+		case <-done:
+		}
+	}()
+
+	if a.cfg.Admin.TLS.CertFile != "" {
+		err = a.adminServer.ServeTLS(listener, a.cfg.Admin.TLS.CertFile, a.cfg.Admin.TLS.KeyFile)
+	} else {
+		err = a.adminServer.Serve(listener)
+	}
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+	return err
+}
+
+// adminGracePeriod bounds how long in-flight admin requests have to finish.
+const adminGracePeriod = 15 * time.Second
+
+// AdminAddress reports what the management interface bound to.
+func (a *App) AdminAddress() string { return a.cfg.Admin.Address }
 
 // Close releases the database.
 func (a *App) Close() error {

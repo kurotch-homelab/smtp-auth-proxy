@@ -46,7 +46,9 @@ type Options struct {
 
 	Auth      Authenticator
 	Submitter Submitter
-	Log       *slog.Logger
+	// Recorder receives metrics; nil disables them.
+	Recorder Recorder
+	Log      *slog.Logger
 }
 
 // Server runs one or more SMTP listeners over a shared backend.
@@ -65,6 +67,7 @@ type Server struct {
 
 	auth          Authenticator
 	submitter     Submitter
+	recorder      Recorder
 	log           *slog.Logger
 	limiter       *connLimiter
 	proxyProtocol config.ProxyProtocol
@@ -117,6 +120,9 @@ func New(opts Options) (*Server, error) {
 	if opts.Log == nil {
 		opts.Log = slog.Default()
 	}
+	if opts.Recorder == nil {
+		opts.Recorder = nopRecorder{}
+	}
 
 	requireTLS := false
 	for _, l := range opts.Listeners {
@@ -140,6 +146,7 @@ func New(opts Options) (*Server, error) {
 		submitTimeout:     orDefault(opts.SubmitTimeout, defaultSubmitTimeout),
 		auth:              opts.Auth,
 		submitter:         opts.Submitter,
+		recorder:          opts.Recorder,
 		log:               opts.Log,
 		limiter:           newConnLimiter(opts.MaxConnectionsPerIP, opts.MaxConnections),
 		proxyProtocol:     opts.ProxyProtocol,

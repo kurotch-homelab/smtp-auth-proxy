@@ -51,6 +51,7 @@ func (s *session) AuthMechanisms() []string {
 // Auth returns the SASL server for a mechanism.
 func (s *session) Auth(mech string) (sasl.Server, error) {
 	if !s.encrypted() && !s.server.allowInsecureAuth {
+		s.server.recorder.AuthFailure(AuthFailureNoTLS)
 		return nil, &smtp.SMTPError{
 			Code:         538,
 			EnhancedCode: smtp.EnhancedCode{5, 7, 11},
@@ -78,6 +79,7 @@ func (s *session) authenticate(username, password string) error {
 	identity, err := s.server.auth.Authenticate(ctx, username, password, remoteIP(s.remote))
 	if err != nil {
 		s.recordAuthFailure(username, err)
+		s.server.recorder.AuthFailure(AuthFailureCredentials)
 		return ErrAuthFailed
 	}
 
@@ -187,6 +189,7 @@ func (s *session) Data(r io.Reader) error {
 
 	parsed, err := parseMessage(raw)
 	if err != nil {
+		s.server.recorder.Submission(SubmissionRejected)
 		s.server.log.Warn("rejecting an unparseable message",
 			"username", s.identity.Username, "remote", addrKey(s.remote), "reason", err)
 		return &smtp.SMTPError{
@@ -212,6 +215,7 @@ func (s *session) Data(r io.Reader) error {
 		HeaderFrom:   headerFrom,
 	})
 	if decision.Rejected() {
+		s.server.recorder.Submission(SubmissionRejected)
 		s.server.log.Warn("rejecting a submission",
 			"username", s.identity.Username,
 			"remote", addrKey(s.remote),
@@ -249,6 +253,7 @@ func (s *session) Data(r io.Reader) error {
 
 	id, err := s.server.submitter.Submit(ctx, sub)
 	if err != nil {
+		s.server.recorder.Submission(SubmissionFailed)
 		s.server.log.Error("failed to queue a submission",
 			"username", s.identity.Username, "reason", err)
 		// A 4xx tells the client to retry, which is right: the message was
@@ -260,6 +265,7 @@ func (s *session) Data(r io.Reader) error {
 		}
 	}
 
+	s.server.recorder.Submission(SubmissionAccepted)
 	s.server.log.Info("queued a submission",
 		"message_id", id,
 		"username", s.identity.Username,

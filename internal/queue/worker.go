@@ -39,6 +39,8 @@ type Options struct {
 	// which is what a Kubernetes rollout needs: two replicas must never share
 	// an identity or they would steal each other's leases.
 	WorkerID string
+	// Recorder receives metrics; nil disables them.
+	Recorder Recorder
 	Log      *slog.Logger
 	// now is injectable for tests.
 	now func() time.Time
@@ -83,6 +85,9 @@ func New(opts Options) (*Runner, error) {
 	}
 	if opts.Log == nil {
 		opts.Log = slog.Default()
+	}
+	if opts.Recorder == nil {
+		opts.Recorder = nopRecorder{}
 	}
 	if opts.now == nil {
 		opts.now = time.Now
@@ -235,6 +240,7 @@ func (r *Runner) deliver(ctx context.Context, m *store.Message) {
 	elapsed := r.opts.now().Sub(start)
 
 	if sendErr == nil {
+		r.opts.Recorder.Delivery(backend.Name(), DeliverySent, elapsed)
 		if err := r.opts.DB.Messages().MarkSent(ctx, m.ID, r.opts.WorkerID); err != nil {
 			// The message was delivered. Failing to record that means it will be
 			// retried and the recipient will see it twice, so it is worth an
@@ -249,6 +255,7 @@ func (r *Runner) deliver(ctx context.Context, m *store.Message) {
 	}
 
 	r.recordFailure(ctx, log.With("transport", backend.Name(), "duration", elapsed), m, sendErr)
+	r.opts.Recorder.Delivery(backend.Name(), outcomeFor(sendErr), elapsed)
 }
 
 // prepare loads everything a delivery needs.
@@ -327,6 +334,49 @@ func (r *Runner) recordFailure(ctx context.Context, log *slog.Logger, m *store.M
 		"code", failure.Code, "retry_at", retryAt, "reason", failure.Message)
 }
 
+// outcomeFor labels a failed delivery by whether it will be retried.
+func outcomeFor(err error) string {
+	if transport.IsPermanent(err) {
+		return DeliveryFailed
+	}
+	return DeliveryDeferred
+}
+
+// publishGauges reports queue depth and credential expiry.
+//
+// These are the numbers worth alerting on: a queue that stops draining means
+// mail is not being delivered whatever the error counters say, and a credential
+// quietly expiring is the most common way a working deployment breaks.
+func (r *Runner) publishGauges(ctx context.Context) {
+	counts, err := r.opts.DB.Messages().CountByStatus(ctx)
+	if err == nil {
+		// Every status is published, including the ones at zero, so a gauge
+		// that drops to nothing is visible rather than simply absent.
+		for _, status := range []store.MessageStatus{
+			store.StatusQueued, store.StatusSending, store.StatusDeferred,
+			store.StatusFailed, store.StatusHeld, store.StatusSent,
+		} {
+			r.opts.Recorder.QueueDepth(string(status), float64(counts[status]))
+		}
+	} else if ctx.Err() == nil {
+		r.log.Warn("could not publish queue depth", "reason", err)
+	}
+
+	credentials, err := r.opts.DB.Credentials().List(ctx)
+	if err != nil {
+		if ctx.Err() == nil {
+			r.log.Warn("could not publish credential expiry", "reason", err)
+		}
+		return
+	}
+	for _, c := range credentials {
+		if !c.ExpiresAt.Valid {
+			continue
+		}
+		r.opts.Recorder.CredentialExpiry(c.Name, time.Until(c.ExpiresAt.Time).Seconds())
+	}
+}
+
 // housekeeping releases abandoned leases and prunes finished messages.
 func (r *Runner) housekeeping(ctx context.Context) {
 	ticker := time.NewTicker(r.opts.PurgeInterval)
@@ -335,9 +385,17 @@ func (r *Runner) housekeeping(ctx context.Context) {
 	// Reclaim on start: a crash leaves messages in `sending`, and an operator
 	// watching the queue should not have to wait an hour to see them recover.
 	r.releaseExpiredLeases(ctx)
+	r.publishGauges(ctx)
+
+	// Gauges refresh far more often than the purge: a dashboard showing an
+	// hour-old queue depth is worse than none.
+	gauges := time.NewTicker(gaugeInterval)
+	defer gauges.Stop()
 
 	for {
 		select {
+		case <-gauges.C:
+			r.publishGauges(ctx)
 		case <-ticker.C:
 			r.releaseExpiredLeases(ctx)
 			r.purge(ctx)
@@ -346,6 +404,9 @@ func (r *Runner) housekeeping(ctx context.Context) {
 		}
 	}
 }
+
+// gaugeInterval is how often queue depth and credential expiry are refreshed.
+const gaugeInterval = 15 * time.Second
 
 func (r *Runner) releaseExpiredLeases(ctx context.Context) {
 	n, err := r.opts.DB.Messages().ReleaseExpiredLeases(ctx)
