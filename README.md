@@ -11,8 +11,6 @@ proxy sits between them and Exchange Online: it accepts an ordinary `AUTH LOGIN`
 `AUTH PLAIN` submission on your LAN and re-sends the message as the matching **shared
 mailbox** using the OAuth 2.0 client credentials flow.
 
-> **Status:** under active development. See [the roadmap](#roadmap) for what works today.
-
 ## How it works
 
 ```
@@ -46,11 +44,39 @@ anything else, and a single Entra app registration covers every mailbox.
 
 ## Quick start
 
-Not yet published — build from source for now:
+With Docker Compose:
 
 ```bash
-make web-build && make build && ./bin/smtp-auth-proxy version
+cd deploy/compose
+cp .env.example .env
 ```
+
+Generate the encryption key, put it in `.env`, and start:
+
+```bash
+docker compose up -d
+```
+
+```bash
+docker compose exec proxy /usr/local/bin/smtp-auth-proxy adduser --config /etc/smtp-auth-proxy/config.yaml --username admin
+```
+
+The generated password is printed once. Open http://localhost:8080, sign in, and
+follow the credential screen's **Setup** dialog — it generates the Exchange
+Online PowerShell with your values filled in.
+
+On Kubernetes:
+
+```bash
+kubectl create secret generic smtp-auth-proxy-encryption --from-literal=key="$(docker run --rm ghcr.io/kurotch-homelab/smtp-auth-proxy:latest genkey -quiet)"
+```
+
+```bash
+helm install smtp-auth-proxy oci://ghcr.io/kurotch-homelab/charts/smtp-auth-proxy --set encryption.existingSecret=smtp-auth-proxy-encryption
+```
+
+For a declarative, GitOps-style deployment, see the bootstrap section of
+[`docs/configuration.md`](docs/configuration.md).
 
 ## Microsoft 365 prerequisites
 
@@ -67,19 +93,14 @@ it access once. In short:
 The admin UI generates these PowerShell commands with your values filled in. Full walkthrough:
 [`docs/setup-m365.md`](docs/setup-m365.md).
 
-## Roadmap
+## Documentation
 
-| Stage | Status |
+| Guide | What it covers |
 | --- | --- |
-| Repository, CI, dependency automation | ✅ |
-| Configuration, database, secret encryption | 🚧 |
-| SMTP ingress, sender policy, spool | ⬜ |
-| OAuth tokens, XOAUTH2 relay, queue workers | ⬜ |
-| Microsoft Graph transport | ⬜ |
-| Admin API, authentication, RBAC, audit log | ⬜ |
-| Admin UI | ⬜ |
-| Docker Compose and Helm chart | ⬜ |
-| Documentation and releases | ⬜ |
+| [`docs/setup-m365.md`](docs/setup-m365.md) | The tenant side: app registration, consent, `New-ServicePrincipal`, mailbox permissions |
+| [`docs/configuration.md`](docs/configuration.md) | `config.yaml`, secret handling, key rotation, GitOps bootstrap |
+| [`docs/architecture.md`](docs/architecture.md) | How a message moves through the proxy, and the trust boundaries |
+| [`docs/troubleshooting.md`](docs/troubleshooting.md) | Working back from an error — including every flavor of `535` |
 
 ## Development
 

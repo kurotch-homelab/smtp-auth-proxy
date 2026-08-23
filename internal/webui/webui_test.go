@@ -118,3 +118,39 @@ func TestHandlerRoutes(t *testing.T) {
 		})
 	}
 }
+
+func TestHandlerForAnUnbuiltTree(t *testing.T) {
+	t.Parallel()
+
+	// The committed tree holds only .gitkeep until `make web-build` runs; a
+	// binary built from it must explain itself rather than serve a broken page.
+	// The real embed usually has the UI, so the path is exercised directly.
+	empty := fstest.MapFS{}
+
+	rec := httptest.NewRecorder()
+	handlerFor(empty).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "make web-build") {
+		t.Errorf("the response does not say what to do: %q", rec.Body.String())
+	}
+}
+
+func TestHandlerUsesTheEmbeddedTree(t *testing.T) {
+	t.Parallel()
+
+	// Handler() serves whatever the build embedded. Either way it must answer;
+	// which branch depends on whether the UI was built before `go test`.
+	rec := httptest.NewRecorder()
+	Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", http.NoBody))
+
+	if Available() {
+		if rec.Code != http.StatusOK {
+			t.Errorf("status = %d with a built UI, want 200", rec.Code)
+		}
+	} else if rec.Code != http.StatusNotFound {
+		t.Errorf("status = %d with no built UI, want 404", rec.Code)
+	}
+}

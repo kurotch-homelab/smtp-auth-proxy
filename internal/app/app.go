@@ -17,6 +17,7 @@ import (
 
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminapi"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminauth"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/bootstrap"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/config"
 	appcrypto "github.com/kurotch-homelab/smtp-auth-proxy/internal/crypto"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/metrics"
@@ -77,6 +78,13 @@ func New(ctx context.Context, cfg config.Config, log *slog.Logger) (*App, error)
 		}
 		if applied > 0 {
 			log.Info("applied database migrations", "count", applied, "driver", cfg.Database.Driver)
+		}
+	}
+
+	if cfg.Bootstrap.Mode != config.BootstrapOff {
+		if err := applyBootstrap(ctx, cfg, db, keyring, log); err != nil {
+			_ = db.Close()
+			return nil, err
 		}
 	}
 
@@ -354,6 +362,27 @@ func (a *App) buildQueue() error {
 
 	a.queue = runner
 	return nil
+}
+
+// applyBootstrap seeds the database from the declarative file.
+//
+// A failure here is fatal on purpose: a deployment that declares its state and
+// then starts without it is worse than one that fails loudly at boot, because
+// the drift is invisible until mail goes to the wrong place.
+func applyBootstrap(ctx context.Context, cfg config.Config, db *store.DB, keyring *appcrypto.Keyring, log *slog.Logger) error {
+	f, err := bootstrap.Load(cfg.Bootstrap.Path)
+	if err != nil {
+		return err
+	}
+
+	applier := &bootstrap.Applier{
+		DB:        db,
+		Keyring:   keyring,
+		Reconcile: cfg.Bootstrap.Mode == config.BootstrapReconcile,
+		Log:       log,
+	}
+	_, err = applier.Apply(ctx, f)
+	return err
 }
 
 // workerID identifies this process in a message lease.
