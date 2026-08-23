@@ -1,0 +1,31 @@
+# Overlay that replaces SQLite with PostgreSQL:
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+#
+# Point database.dsn in config.yaml at ${DATABASE_URL} and set
+# POSTGRES_PASSWORD in .env.
+
+services:
+  proxy:
+    environment:
+      DATABASE_URL: postgres://proxy:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/proxy?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: proxy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: proxy
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U proxy']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

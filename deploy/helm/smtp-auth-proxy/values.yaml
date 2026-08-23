@@ -1,0 +1,139 @@
+# Default values for smtp-auth-proxy.
+
+image:
+  repository: ghcr.io/kurotch-homelab/smtp-auth-proxy
+  # Defaults to the chart's appVersion.
+  tag: ''
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# How many proxies to run.
+#
+# More than one requires database.driver=postgres: SQLite is a local file, and
+# two replicas writing one file through two volumes is data loss, not
+# availability. The chart refuses to render that combination.
+replicaCount: 1
+
+database:
+  # sqlite | postgres
+  driver: sqlite
+  # For sqlite: the path inside the container; a PVC is mounted over its
+  # directory. For postgres: a DSN, or leave empty and set existingSecret.
+  dsn: /var/lib/smtp-auth-proxy/data.db
+  # A Secret holding the DSN under `key`, for postgres. Wins over `dsn`.
+  existingSecret: ''
+  existingSecretKey: dsn
+
+encryption:
+  # The name of a Secret holding the encryption key under `key`. Required:
+  # generate the value with `smtp-auth-proxy genkey` and create the Secret
+  # yourself, so the key never passes through Helm's release storage.
+  existingSecret: ''
+  existingSecretKey: key
+
+# The static configuration. Rendered into a ConfigMap as config.yaml; the
+# database and encryption sections are injected from the settings above.
+config:
+  log:
+    level: info
+    format: json
+  smtp:
+    hostname: smtp-auth-proxy
+    listeners:
+      - address: ':587'
+        tls: starttls
+        require_tls: true
+        require_auth: true
+    tls:
+      # Mount a real certificate via smtp.tls.existingSecret below; this
+      # self-signed default only makes a fresh install come up.
+      self_signed: true
+  admin:
+    address: ':8080'
+
+smtp:
+  service:
+    # LoadBalancer hands port 587 to the LAN. NodePort works where there is no
+    # load-balancer implementation; ClusterIP only serves inside the cluster.
+    type: LoadBalancer
+    port: 587
+    annotations: {}
+    # Local preserves the client's source address, which the per-account
+    # network restrictions depend on. It requires the pod to be on the node
+    # receiving the traffic.
+    externalTrafficPolicy: Local
+  tls:
+    # A kubernetes.io/tls Secret (e.g. from cert-manager) served to LAN
+    # clients. When set, config.smtp.tls.self_signed should be false and
+    # cert_file/key_file are wired automatically.
+    existingSecret: ''
+
+admin:
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: false
+    className: ''
+    annotations: {}
+    hosts: []
+    #  - host: smtp-proxy.example.com
+    #    paths: [{path: /, pathType: Prefix}]
+    tls: []
+    #  - secretName: smtp-proxy-tls
+    #    hosts: [smtp-proxy.example.com]
+
+persistence:
+  # Only used with the sqlite driver.
+  enabled: true
+  size: 1Gi
+  storageClass: ''
+  accessModes: [ReadWriteOnce]
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+metrics:
+  serviceMonitor:
+    # Requires the Prometheus operator CRDs.
+    enabled: false
+    interval: 30s
+    labels: {}
+
+podDisruptionBudget:
+  # Only meaningful with more than one replica.
+  enabled: false
+  minAvailable: 1
+
+networkPolicy:
+  # Restricts ingress to the two service ports. Egress is left open: the proxy
+  # has to reach Microsoft endpoints whose addresses are not enumerable.
+  enabled: false
+
+serviceAccount:
+  create: true
+  name: ''
+  annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+priorityClassName: ''
+
+# Applied to the container; the defaults drop everything droppable.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop: [ALL]
+  seccompProfile:
+    type: RuntimeDefault

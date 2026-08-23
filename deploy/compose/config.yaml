@@ -1,0 +1,33 @@
+# The Compose deployment's configuration. See config.example.yaml in the
+# repository root for every option and its explanation.
+
+log:
+  level: info
+  format: json
+
+database:
+  driver: sqlite
+  dsn: /var/lib/smtp-auth-proxy/data.db
+  auto_migrate: true
+  # With the PostgreSQL overlay, use instead:
+  # driver: postgres
+  # dsn: ${DATABASE_URL}
+
+encryption:
+  keys:
+    - ${SMTP_AUTH_PROXY_ENCRYPTION_KEY}
+
+smtp:
+  hostname: smtp-auth-proxy
+  listeners:
+    - address: ':587'
+      tls: starttls
+      require_tls: true
+      require_auth: true
+  tls:
+    # Fine for a first run; every device must be told to trust it. Mount a real
+    # certificate and set cert_file/key_file for anything durable.
+    self_signed: true
+
+admin:
+  address: ':8080'

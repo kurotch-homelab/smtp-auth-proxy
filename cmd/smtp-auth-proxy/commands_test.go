@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -147,5 +149,36 @@ func TestParseLevel(t *testing.T) {
 		if got := parseLevel(in).String(); got != want {
 			t.Errorf("parseLevel(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestHealthcheckProbesTheEndpoint(t *testing.T) {
+	healthy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer healthy.Close()
+
+	if _, err := captureStdout(t, func(w *os.File) error {
+		return run(context.Background(), []string{"healthcheck", "--url", healthy.URL}, w, w)
+	}); err != nil {
+		t.Errorf("healthcheck against a healthy endpoint: %v", err)
+	}
+
+	unhealthy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer unhealthy.Close()
+
+	if _, err := captureStdout(t, func(w *os.File) error {
+		return run(context.Background(), []string{"healthcheck", "--url", unhealthy.URL}, w, w)
+	}); err == nil {
+		t.Error("healthcheck against an unhealthy endpoint reported success")
+	}
+
+	// Nothing listening at all.
+	if _, err := captureStdout(t, func(w *os.File) error {
+		return run(context.Background(), []string{"healthcheck", "--url", "http://127.0.0.1:1/readyz", "--timeout", "1s"}, w, w)
+	}); err == nil {
+		t.Error("healthcheck against a closed port reported success")
 	}
 }

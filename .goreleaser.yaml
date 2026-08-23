@@ -1,0 +1,49 @@
+version: 2
+
+project_name: smtp-auth-proxy
+
+before:
+  hooks:
+    # The admin UI is embedded, so the bundle has to exist before Go builds.
+    - sh -c 'cd web && npm ci && npm run build'
+
+builds:
+  - main: ./cmd/smtp-auth-proxy
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X github.com/kurotch-homelab/smtp-auth-proxy/internal/version.Version={{ .Version }}
+      - -X github.com/kurotch-homelab/smtp-auth-proxy/internal/version.Commit={{ .ShortCommit }}
+      - -X github.com/kurotch-homelab/smtp-auth-proxy/internal/version.BuildDate={{ .Date }}
+
+archives:
+  - formats: [tar.gz]
+    files: [LICENSE, NOTICE, README.md, config.example.yaml]
+
+checksum:
+  name_template: checksums.txt
+
+sboms:
+  - artifacts: archive
+
+changelog:
+  use: github
+  groups:
+    - title: Features
+      regexp: '^feat'
+      order: 0
+    - title: Fixes
+      regexp: '^fix'
+      order: 1
+    - title: Other
+      order: 999
+  filters:
+    exclude: ['^chore\(deps\)', '^ci']
+
+release:
+  footer: |
+    **Container image**: `ghcr.io/kurotch-homelab/smtp-auth-proxy:{{ .Version }}`
+    **Helm chart**: `oci://ghcr.io/kurotch-homelab/charts/smtp-auth-proxy` version `{{ .Version }}`

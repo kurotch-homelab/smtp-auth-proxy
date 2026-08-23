@@ -1,0 +1,52 @@
+name: Helm chart
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/helm/**'
+      - '.github/workflows/helm.yml'
+      - 'Dockerfile'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/helm/**'
+      - '.github/workflows/helm.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-install:
+    name: Lint and install on kind
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # chart-testing compares against the target branch to find changes.
+          fetch-depth: 0
+
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+
+      - name: Lint
+        run: ct lint --chart-dirs deploy/helm --charts deploy/helm/smtp-auth-proxy --validate-maintainers=false
+
+      - uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+
+      # The install test needs the image and the Secret the chart's guard
+      # requires; neither exists in a fresh kind cluster.
+      - name: Build and load the image
+        run: |
+          docker build -t ghcr.io/kurotch-homelab/smtp-auth-proxy:0.1.0 .
+          kind load docker-image ghcr.io/kurotch-homelab/smtp-auth-proxy:0.1.0 --name chart-testing
+
+      - name: Create the encryption Secret
+        run: |
+          kubectl create secret generic smtp-auth-proxy-test-encryption \
+            --from-literal=key="k1:$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')"
+
+      - name: Install
+        run: |
+          ct install --chart-dirs deploy/helm --charts deploy/helm/smtp-auth-proxy \
+            --helm-extra-set-args '--set=image.pullPolicy=IfNotPresent --set=smtp.service.type=ClusterIP'

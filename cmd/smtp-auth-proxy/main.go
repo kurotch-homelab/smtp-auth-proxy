@@ -48,6 +48,7 @@ func commands() []command {
 		{"adduser", "Create an administrator for the management interface", runAddUser},
 		{"genkey", "Generate an encryption key for secrets at rest", runGenkey},
 		{"passwd", "Hash an SMTP account password (generates one if omitted)", runPasswd},
+		{"healthcheck", "Probe the running proxy's readiness endpoint", runHealthcheck},
 		{"version", "Print build information", runVersion},
 	}
 }
