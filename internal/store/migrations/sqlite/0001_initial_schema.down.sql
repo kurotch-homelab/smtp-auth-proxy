@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS admin_sessions;
+DROP TABLE IF EXISTS admin_users;
+DROP TABLE IF EXISTS message_blobs;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS allowed_senders;
+DROP TABLE IF EXISTS smtp_account_mailboxes;
+DROP TABLE IF EXISTS smtp_accounts;
+DROP TABLE IF EXISTS mailboxes;
+DROP TABLE IF EXISTS oauth_credentials;
