@@ -41,12 +41,17 @@ jobs:
           docker build -t ghcr.io/kurotch-homelab/smtp-auth-proxy:0.1.0 .
           kind load docker-image ghcr.io/kurotch-homelab/smtp-auth-proxy:0.1.0 --name chart-testing
 
-      - name: Create the encryption Secret
+      # chart-testing installs into a random namespace unless pinned, and a
+      # Secret created in default would be invisible there — the pod fails with
+      # CreateContainerConfigError until the job times out.
+      - name: Create the namespace and encryption Secret
         run: |
-          kubectl create secret generic smtp-auth-proxy-test-encryption \
+          kubectl create namespace smtp-auth-proxy-ct
+          kubectl -n smtp-auth-proxy-ct create secret generic smtp-auth-proxy-test-encryption \
             --from-literal=key="k1:$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')"
 
       - name: Install
         run: |
           ct install --chart-dirs deploy/helm --charts deploy/helm/smtp-auth-proxy \
+            --namespace smtp-auth-proxy-ct \
             --helm-extra-set-args '--set=image.pullPolicy=IfNotPresent --set=smtp.service.type=ClusterIP'

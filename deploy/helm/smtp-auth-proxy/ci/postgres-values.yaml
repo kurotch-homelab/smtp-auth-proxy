@@ -1,9 +1,0 @@
-# The multi-replica variant: postgres driver, rolling updates.
-encryption:
-  existingSecret: smtp-auth-proxy-test-encryption
-replicaCount: 2
-database:
-  driver: postgres
-  dsn: postgres://proxy:proxy@postgres:5432/proxy?sslmode=disable
-persistence:
-  enabled: false

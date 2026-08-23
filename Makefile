@@ -161,7 +161,7 @@ helm-lint: ## Lint the Helm chart and render every variant
 	helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
 		-f deploy/helm/smtp-auth-proxy/ci/default-values.yaml >/dev/null
 	helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
-		-f deploy/helm/smtp-auth-proxy/ci/postgres-values.yaml >/dev/null
+		-f deploy/helm/smtp-auth-proxy/test-values/postgres.yaml >/dev/null
 	@# The guard itself must keep firing: rendering the forbidden combination
 	@# has to fail, or the protection quietly rotted.
 	@if helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
