@@ -21,6 +21,7 @@ import (
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/smtpsrv"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/transport"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/transport/graph"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/transport/smtprelay"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/version"
 )
@@ -190,10 +191,38 @@ func (a *App) buildQueue() error {
 		delays = append(delays, d.Duration())
 	}
 
+	graphTLS, err := upstreamTLSConfig(a.cfg.Upstream.TLS)
+	if err != nil {
+		return err
+	}
+	graphClient := &http.Client{Timeout: a.cfg.Upstream.Timeout.Duration()}
+	if graphTLS != nil {
+		base, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return fmt.Errorf("app: the default HTTP transport is %T, not *http.Transport", http.DefaultTransport)
+		}
+		cloned := base.Clone()
+		cloned.TLSClientConfig = graphTLS
+		graphClient.Transport = cloned
+	}
+
+	graphTransport, err := graph.New(graph.Options{
+		Endpoint:   a.cfg.Upstream.Graph.Endpoint,
+		Scope:      a.cfg.Upstream.OAuth.GraphScope,
+		Timeout:    a.cfg.Upstream.Timeout.Duration(),
+		HTTPClient: graphClient,
+		Tokens:     a.tokens,
+		Log:        a.log,
+	})
+	if err != nil {
+		return err
+	}
+
 	runner, err := queue.New(queue.Options{
 		DB: a.db,
 		Transports: map[store.Transport]transport.Transport{
-			store.TransportSMTP: relay,
+			store.TransportSMTP:  relay,
+			store.TransportGraph: graphTransport,
 		},
 		Workers:       a.cfg.Queue.Workers,
 		PollInterval:  a.cfg.Queue.PollInterval.Duration(),
