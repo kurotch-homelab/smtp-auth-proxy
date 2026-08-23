@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/logsafe"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 )
 
@@ -86,7 +87,8 @@ func (s *Server) writeStoreError(w http.ResponseWriter, r *http.Request, err err
 		writeError(w, http.StatusConflict, CodeImmutable,
 			"this object is declared in the bootstrap file and cannot be edited here")
 	default:
-		s.logger(r).Error("unhandled error", "path", r.URL.Path, "reason", err)
+		s.logger(r).Error("unhandled error",
+			"path", logsafe.String(r.URL.Path), "reason", logsafe.Error(err))
 		writeError(w, http.StatusInternalServerError, CodeInternal, "something went wrong")
 	}
 }

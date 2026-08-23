@@ -3,12 +3,14 @@ package adminapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
 	"time"
 
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminauth"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/logsafe"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 )
 
@@ -34,10 +36,13 @@ func requestIDFrom(ctx context.Context) string {
 }
 
 // logger returns a logger tagged with the request's identity.
+//
+// The username originated as user input, so it is neutralized here once rather
+// than at every call site that inherits it.
 func (s *Server) logger(r *http.Request) *slog.Logger {
 	log := s.log.With("request_id", requestIDFrom(r.Context()))
 	if auth := authFrom(r.Context()); auth != nil {
-		log = log.With("actor", auth.User.Username)
+		log = log.With("actor", logsafe.String(auth.User.Username))
 	}
 	return log
 }
@@ -67,8 +72,8 @@ func (s *Server) recoverPanics(next http.Handler) http.Handler {
 				panic(p)
 			}
 			s.logger(r).Error("a request handler panicked",
-				"path", r.URL.Path, "method", r.Method,
-				"panic", p, "stack", string(debug.Stack()))
+				"path", logsafe.String(r.URL.Path), "method", logsafe.String(r.Method),
+				"panic", logsafe.String(fmt.Sprint(p)), "stack", string(debug.Stack()))
 			writeError(w, http.StatusInternalServerError, CodeInternal, "something went wrong")
 		}()
 		next.ServeHTTP(w, r)
@@ -91,8 +96,8 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 		}
 
 		s.logger(r).Log(r.Context(), level, "admin api request",
-			"method", r.Method,
-			"path", r.URL.Path,
+			"method", logsafe.String(r.Method),
+			"path", logsafe.String(r.URL.Path),
 			"status", rec.status,
 			"duration", time.Since(start),
 			"remote", adminauth.ClientIP(r, s.trustedProxies),
@@ -138,7 +143,7 @@ func (s *Server) requireSession(next http.Handler) http.Handler {
 
 		if err := s.sessions.CheckCSRF(auth, r); err != nil {
 			s.logger(r).Warn("rejected a request that failed its CSRF check",
-				"path", r.URL.Path, "method", r.Method,
+				"path", logsafe.String(r.URL.Path), "method", logsafe.String(r.Method),
 				"remote", adminauth.ClientIP(r, s.trustedProxies))
 			writeError(w, http.StatusForbidden, CodeCSRF,
 				"this request could not be verified; reload the page and try again")
@@ -164,7 +169,7 @@ func (s *Server) require(perm adminauth.Permission) func(http.Handler) http.Hand
 			}
 			if !adminauth.Can(auth.User.Role, perm) {
 				s.logger(r).Warn("refused an action the role does not allow",
-					"path", r.URL.Path, "method", r.Method,
+					"path", logsafe.String(r.URL.Path), "method", logsafe.String(r.Method),
 					"role", auth.User.Role, "permission", perm)
 				writeError(w, http.StatusForbidden, CodeForbidden,
 					"your role does not allow this")

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminauth"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/logsafe"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 )
 
@@ -263,7 +264,8 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 
 	if errCode := r.URL.Query().Get("error"); errCode != "" {
 		s.logger(r).Warn("the identity provider refused a sign-in",
-			"error", errCode, "description", r.URL.Query().Get("error_description"))
+			"error", logsafe.String(errCode),
+			"description", logsafe.String(r.URL.Query().Get("error_description")))
 		s.redirectToSignIn(w, r, "sso_failed")
 		return
 	}
@@ -290,7 +292,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 	user, err := s.oidc.Complete(ctx, r.URL.Query().Get("code"), pending,
 		r.URL.Query().Get("state"), s.oidcClient)
 	if err != nil {
-		s.logger(r).Warn("single sign-on did not complete", "reason", err)
+		s.logger(r).Warn("single sign-on did not complete", "reason", logsafe.Error(err))
 		s.recordFailedSignIn(ctx, r, "(single sign-on)", err)
 
 		switch {

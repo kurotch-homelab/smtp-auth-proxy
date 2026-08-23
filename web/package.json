@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node -e \"require('fs').writeFileSync('../internal/webui/dist/.gitkeep','')\"",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

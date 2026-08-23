@@ -8,6 +8,7 @@ import (
 	"time"
 
 	appcrypto "github.com/kurotch-homelab/smtp-auth-proxy/internal/crypto"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/logsafe"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 )
 
@@ -92,7 +93,7 @@ func (a *LocalAuthenticator) Authenticate(ctx context.Context, username, passwor
 	match, needsRehash, err := appcrypto.VerifyPassword(user.PasswordHash.String, password)
 	if err != nil {
 		a.log.Warn("a stored admin password hash is unusable",
-			"username", username, "reason", err)
+			"username", logsafe.String(username), "reason", logsafe.Error(err))
 		return nil, ErrInvalidCredentials
 	}
 	if !match {
@@ -110,7 +111,8 @@ func (a *LocalAuthenticator) Authenticate(ctx context.Context, username, passwor
 		a.rehash(ctx, user, password)
 	}
 	if err := a.db.Users().RecordSuccessfulLogin(ctx, user.ID); err != nil {
-		a.log.Warn("could not record a successful sign-in", "username", username, "reason", err)
+		a.log.Warn("could not record a successful sign-in",
+			"username", logsafe.String(username), "reason", logsafe.Error(err))
 	}
 	return user, nil
 }
@@ -118,7 +120,8 @@ func (a *LocalAuthenticator) Authenticate(ctx context.Context, username, passwor
 func (a *LocalAuthenticator) recordFailure(ctx context.Context, user *store.AdminUser) {
 	err := a.db.Users().RecordFailedLogin(ctx, user.ID, a.cfg.LockoutThreshold, a.cfg.LockoutDuration)
 	if err != nil {
-		a.log.Warn("could not record a failed sign-in", "username", user.Username, "reason", err)
+		a.log.Warn("could not record a failed sign-in",
+			"username", logsafe.String(user.Username), "reason", logsafe.Error(err))
 	}
 }
 
@@ -127,17 +130,19 @@ func (a *LocalAuthenticator) recordFailure(ctx context.Context, user *store.Admi
 func (a *LocalAuthenticator) rehash(ctx context.Context, user *store.AdminUser, password string) {
 	updated, err := appcrypto.HashPassword(password)
 	if err != nil {
-		a.log.Warn("could not rehash an admin password", "username", user.Username, "reason", err)
+		a.log.Warn("could not rehash an admin password",
+			"username", logsafe.String(user.Username), "reason", logsafe.Error(err))
 		return
 	}
 
 	user.PasswordHash = store.NullString(updated)
 	if err := a.db.Users().Update(ctx, user); err != nil {
-		a.log.Warn("could not store a rehashed admin password", "username", user.Username, "reason", err)
+		a.log.Warn("could not store a rehashed admin password",
+			"username", logsafe.String(user.Username), "reason", logsafe.Error(err))
 		return
 	}
 	a.log.Info("upgraded a stored admin password to the current hashing parameters",
-		"username", user.Username)
+		"username", logsafe.String(user.Username))
 }
 
 // SetPassword changes a user's password and ends their other sessions.

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/oauth2"
 
 	appcrypto "github.com/kurotch-homelab/smtp-auth-proxy/internal/crypto"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/logsafe"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
 )
 
@@ -255,13 +256,14 @@ func (a *OIDCAuthenticator) syncExisting(ctx context.Context, user *store.AdminU
 		// out.
 		if _, err := a.db.Sessions().DeleteForUser(ctx, user.ID); err != nil {
 			a.log.Warn("could not revoke sessions after a role change",
-				"username", user.Username, "reason", err)
+				"username", logsafe.String(user.Username), "reason", logsafe.Error(err))
 		}
 		a.log.Info("single sign-on changed a user's role",
-			"username", user.Username, "role", role)
+			"username", logsafe.String(user.Username), "role", role)
 	}
 	if err := a.db.Users().RecordSuccessfulLogin(ctx, user.ID); err != nil {
-		a.log.Warn("could not record a successful sign-in", "username", user.Username, "reason", err)
+		a.log.Warn("could not record a successful sign-in",
+			"username", logsafe.String(user.Username), "reason", logsafe.Error(err))
 	}
 	return user, nil
 }
@@ -286,9 +288,11 @@ func (a *OIDCAuthenticator) provision(ctx context.Context, claims *Claims, role 
 	}
 
 	a.log.Info("provisioned a user from single sign-on",
-		"username", username, "role", role, "subject", claims.Subject)
+		"username", logsafe.String(username), "role", role,
+		"subject", logsafe.String(claims.Subject))
 	if err := a.db.Users().RecordSuccessfulLogin(ctx, user.ID); err != nil {
-		a.log.Warn("could not record a successful sign-in", "username", username, "reason", err)
+		a.log.Warn("could not record a successful sign-in",
+			"username", logsafe.String(username), "reason", logsafe.Error(err))
 	}
 	return user, nil
 }
@@ -308,7 +312,7 @@ func (a *OIDCAuthenticator) roleFor(claims *Claims) (store.Role, error) {
 		role, err := ParseRole(mapped)
 		if err != nil {
 			a.log.Warn("a role mapping names a role this build does not know",
-				"claim_value", v, "role", mapped)
+				"claim_value", logsafe.String(v), "role", mapped)
 			continue
 		}
 		if best == "" || morePrivileged(role, best) {

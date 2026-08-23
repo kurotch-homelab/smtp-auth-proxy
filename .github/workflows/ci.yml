@@ -201,8 +201,10 @@ jobs:
       - name: Bring the stack up
         working-directory: deploy/compose
         run: |
-          key="k1:$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')"
-          export SMTP_AUTH_PROXY_ENCRYPTION_KEY="$key"
+          # Written to .env — the documented first-run flow — so every later
+          # step's `docker compose` invocation sees it too; an exported
+          # variable would die with this step's shell.
+          echo "SMTP_AUTH_PROXY_ENCRYPTION_KEY=k1:$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=')" > .env
           docker compose up -d --build
           health=starting
           for _ in $(seq 1 90); do
