@@ -47,7 +47,10 @@ COPY --from=build /out/smtp-auth-proxy /usr/local/bin/smtp-auth-proxy
 # /var/lib/smtp-auth-proxy holds the SQLite database and, when configured, the
 # on-disk spool. Mount a volume here in Compose or a PVC in Kubernetes.
 WORKDIR /var/lib/smtp-auth-proxy
-USER nonroot:nonroot
+# Numeric on purpose: with runAsNonRoot enforced, kubelet rejects images whose
+# USER is a name it cannot resolve ("non-numeric user (nonroot)"). 65532 is
+# distroless's nonroot uid/gid.
+USER 65532:65532
 
 # 587 submission (STARTTLS), 465 submission (implicit TLS), 8080 admin UI/API.
 EXPOSE 587 465 8080

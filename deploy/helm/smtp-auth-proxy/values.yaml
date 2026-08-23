@@ -133,6 +133,11 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   runAsNonRoot: true
+  # distroless's nonroot user, matching the Deployment's fsGroup. Explicit
+  # numbers let kubelet verify runAsNonRoot even against image tags whose USER
+  # is the name "nonroot".
+  runAsUser: 65532
+  runAsGroup: 65532
   capabilities:
     drop: [ALL]
   seccompProfile:
