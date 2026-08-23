@@ -1,0 +1,110 @@
+version: "2"
+
+run:
+  timeout: 5m
+  build-tags:
+    - e2e
+
+linters:
+  default: standard
+  enable:
+    # correctness
+    - bodyclose
+    - contextcheck
+    - errorlint
+    - exhaustive
+    - gocritic
+    - noctx
+    - nilerr
+    - rowserrcheck
+    - sqlclosecheck
+    # security
+    - gosec
+    # style / maintainability
+    - copyloopvar
+    - dupword
+    - misspell
+    - nolintlint
+    - predeclared
+    - revive
+    - unconvert
+    - usestdlibvars
+    - wastedassign
+    # tests
+    - testifylint
+    - tparallel
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+    exhaustive:
+      default-signifies-exhaustive: true
+    gocritic:
+      enabled-tags: [diagnostic, style, performance]
+      disabled-checks:
+        - hugeParam       # noisy for value receivers we keep for clarity
+        - whyNoLint
+    gosec:
+      excludes:
+        - G115  # integer conversion overflow: too many false positives on len()/int64 casts
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+    misspell:
+      locale: US
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+    revive:
+      rules:
+        - name: exported
+          arguments: ["disableStutteringCheck"]
+        - name: package-comments
+          disabled: true
+        - name: unused-parameter
+        - name: indent-error-flow
+        - name: error-strings
+        - name: context-as-argument
+    staticcheck:
+      checks: ["all"]
+
+  exclusions:
+    generated: lax
+    paths:
+      # A few npm packages vendor Go sources; they are not ours to lint.
+      - web/node_modules
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+    rules:
+      # Tests may take shortcuts that production code may not.
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+          - dupword
+      # sqlc emits code we do not control.
+      - path: internal/store/sqlc/
+        linters:
+          - revive
+          - gocritic
+          - dupword
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  exclusions:
+    paths:
+      - web/node_modules
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/kurotch-homelab/smtp-auth-proxy
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

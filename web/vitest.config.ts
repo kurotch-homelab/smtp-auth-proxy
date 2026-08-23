@@ -1,0 +1,27 @@
+import { defineConfig, mergeConfig } from 'vitest/config'
+
+import viteConfig from './vite.config'
+
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test-setup.ts'],
+      exclude: ['e2e/**', 'node_modules/**'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'lcov'],
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/*.test.{ts,tsx}',
+          'src/test-setup.ts',
+          'src/main.tsx',
+          'src/vite-env.d.ts',
+        ],
+        thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
+      },
+    },
+  }),
+)

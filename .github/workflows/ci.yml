@@ -1,0 +1,188 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+
+# A second push to the same PR makes the first run's result irrelevant.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.27'
+  NODE_VERSION: '22'
+
+jobs:
+  lint-go:
+    name: Lint (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+      - name: gofumpt
+        run: |
+          go install mvdan.cc/gofumpt@v0.11.0
+          unformatted="$(gofumpt -l cmd internal)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofumpt found unformatted files:"
+            echo "$unformatted"
+            gofumpt -d cmd internal
+            exit 1
+          fi
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.13.1
+          args: --timeout=5m
+
+  tidy:
+    name: go mod tidy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: make tidy-check
+
+  lint-actions:
+    name: Lint (workflows)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: make lint-actions
+
+  lint-web:
+    name: Lint (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run lint
+        working-directory: web
+      - run: npm run format:check
+        working-directory: web
+      - run: npm run typecheck
+        working-directory: web
+
+  test-go:
+    name: Test (Go, ${{ matrix.db }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: proxy
+          POSTGRES_PASSWORD: proxy
+          POSTGRES_DB: proxy_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U proxy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Test
+        env:
+          # Store tests run against Postgres only in that matrix leg; the SQLite
+          # leg leaves the DSN empty and skips them.
+          TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://proxy:proxy@localhost:5432/proxy_test?sslmode=disable' || '' }}
+        run: make test
+      - name: Enforce coverage thresholds
+        if: matrix.db == 'postgres'
+        run: make coverage-check
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        if: matrix.db == 'postgres'
+        with:
+          files: coverage.out
+          flags: go
+          # Codecov is informational here; the hard gate is `make coverage-check`.
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-web:
+    name: Test (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run test:coverage
+        working-directory: web
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # Proves the real single-binary artifact builds: UI bundled, then embedded.
+      - run: make web-build
+      - run: make build
+      - run: ./bin/smtp-auth-proxy version
+
+  vuln:
+    name: Vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - run: npm ci
+        working-directory: web
+      - run: npm audit --audit-level=high
+        working-directory: web
+
+  license-check:
+    name: Dependency licenses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: make license-check

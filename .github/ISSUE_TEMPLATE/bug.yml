@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the proxy behaves incorrectly.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the SMTP or HTTP status the client saw, if any.
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure a mailbox with transport=smtp
+        2. swaks --server ... --auth LOGIN ...
+        3. Observe ...
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `smtp-auth-proxy version`, or the image tag.
+    validations: { required: true }
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How is it deployed?
+      options: [Docker Compose, Kubernetes (Helm), Binary, Other]
+    validations: { required: true }
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options: [SQLite, PostgreSQL]
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Set `log.level: debug` and paste the lines around the failure.
+        **Redact tokens, client secrets and passwords** — the proxy masks them in
+        its own logs, but not in anything you paste from elsewhere.
+      render: text

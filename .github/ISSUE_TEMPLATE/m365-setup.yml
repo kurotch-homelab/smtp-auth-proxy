@@ -1,0 +1,34 @@
+name: Microsoft 365 setup help
+description: The proxy runs, but Exchange Online rejects the connection.
+labels: [question, m365]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, walk through `docs/troubleshooting.md`. Most `535 5.7.3`
+        failures come from one of three things: admin consent was never granted
+        for `SMTP.SendAsApp`, `New-ServicePrincipal` used the Object ID from
+        **App registrations** instead of **Enterprise applications**, or
+        `Add-MailboxPermission` was never run for the mailbox.
+  - type: input
+    id: error
+    attributes:
+      label: Exact error
+      placeholder: '535 5.7.3 Authentication unsuccessful'
+    validations: { required: true }
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Tenant configuration
+      options:
+        - label: The app registration has the **application** permission `SMTP.SendAsApp` (Office 365 Exchange Online)
+        - label: A tenant admin granted admin consent for that permission
+        - label: `New-ServicePrincipal` was run using the Object ID from **Enterprise applications**
+        - label: '`Add-MailboxPermission -AccessRights FullAccess` was run for the mailbox'
+        - label: The token request used the scope `https://outlook.office365.com/.default`
+        - label: 'The connection test in the admin UI was run, and its output is below'
+  - type: textarea
+    id: test-output
+    attributes:
+      label: Connection test output
+      render: text

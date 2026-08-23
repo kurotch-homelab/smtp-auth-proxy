@@ -1,0 +1,11 @@
+# Default owner for everything in the repository.
+*                       @kurotch-homelab/maintainers
+
+# Anything that touches how mail is authenticated or relayed deserves a
+# second pair of eyes even when the change looks mechanical.
+/internal/oauth/        @kurotch-homelab/maintainers
+/internal/policy/       @kurotch-homelab/maintainers
+/internal/transport/    @kurotch-homelab/maintainers
+/internal/adminauth/    @kurotch-homelab/maintainers
+/internal/crypto/       @kurotch-homelab/maintainers
+/.github/workflows/     @kurotch-homelab/maintainers
