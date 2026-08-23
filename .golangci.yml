@@ -86,6 +86,14 @@ linters:
           - gosec
           - noctx
           - dupword
+      # `if v, err := ...` inside a test that already has an `err` is idiomatic,
+      # and shadow is noisy enough about it to drown out real findings. It stays
+      # enabled for production code, where it has caught genuine confusion.
+      - path: _test\.go
+        linters:
+          - govet
+        text: 'shadow:'
+
       # sqlc emits code we do not control.
       - path: internal/store/sqlc/
         linters:
