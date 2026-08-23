@@ -59,6 +59,10 @@ func (r *MessageRepo) Enqueue(ctx context.Context, m *Message, body []byte) erro
 	if m.NextAttemptAt.IsZero() {
 		m.NextAttemptAt = now
 	}
+	m.ReceivedAt = utc(m.ReceivedAt)
+	m.NextAttemptAt = utc(m.NextAttemptAt)
+	m.SentAt = utcNull(m.SentAt)
+	m.LeaseExpiresAt = utcNull(m.LeaseExpiresAt)
 	m.UpdatedAt = now
 	if m.Status == "" {
 		m.Status = StatusQueued

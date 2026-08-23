@@ -248,7 +248,24 @@ func NullString(s string) sql.NullString {
 
 // NullTime wraps a time, treating the zero value as NULL.
 func NullTime(t time.Time) sql.NullTime {
-	return sql.NullTime{Time: t, Valid: !t.IsZero()}
+	return sql.NullTime{Time: t.UTC(), Valid: !t.IsZero()}
+}
+
+// utc normalizes a timestamp before it is written.
+//
+// SQLite stores a time.Time as text including its offset, so a value in local
+// time compares wrong against one in UTC: an expired row looks live, and a due
+// row looks scheduled. Every write path runs caller-supplied times through
+// this rather than trusting them.
+func utc(t time.Time) time.Time { return t.UTC() }
+
+// utcNull is utc for a nullable timestamp.
+func utcNull(t sql.NullTime) sql.NullTime {
+	if !t.Valid {
+		return t
+	}
+	t.Time = t.Time.UTC()
+	return t
 }
 
 // NullInt wraps an int, treating zero as NULL. The per-object rate limits use

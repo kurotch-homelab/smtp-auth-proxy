@@ -51,7 +51,7 @@ func (r *CredentialRepo) Create(ctx context.Context, c *OAuthCredential) error {
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
 		c.ID, c.Name, c.TenantID, c.ClientID, c.AuthType,
 		c.ClientSecretEnc, c.CertificatePEM, c.CertificateKeyEnc, c.CertificateThumbprint,
-		c.AuthorityHost, c.ExpiresAt, c.ManagedBy, c.CreatedAt, c.UpdatedAt)
+		c.AuthorityHost, utcNull(c.ExpiresAt), c.ManagedBy, c.CreatedAt, c.UpdatedAt)
 	return translateError(r.db.Dialect(), err, "credential "+c.Name)
 }
 
@@ -110,7 +110,7 @@ func (r *CredentialRepo) Update(ctx context.Context, c *OAuthCredential) error {
 		WHERE id = ?`),
 		c.Name, c.TenantID, c.ClientID, c.AuthType,
 		c.ClientSecretEnc, c.CertificatePEM, c.CertificateKeyEnc,
-		c.CertificateThumbprint, c.AuthorityHost, c.ExpiresAt,
+		c.CertificateThumbprint, c.AuthorityHost, utcNull(c.ExpiresAt),
 		c.ManagedBy, c.UpdatedAt, c.ID)
 	if err != nil {
 		return translateError(r.db.Dialect(), err, "credential "+c.Name)
@@ -135,7 +135,7 @@ func (r *CredentialRepo) ExpiringBefore(ctx context.Context, cutoff time.Time) (
 	rows, err := r.db.QueryContext(ctx, r.db.Rebind(
 		`SELECT `+credentialColumns+` FROM oauth_credentials
 		 WHERE expires_at IS NOT NULL AND expires_at < ?
-		 ORDER BY expires_at`), cutoff)
+		 ORDER BY expires_at`), utc(cutoff))
 	if err != nil {
 		return nil, fmt.Errorf("store: listing expiring credentials: %w", err)
 	}

@@ -59,7 +59,7 @@ func (r *AccountRepo) Create(ctx context.Context, a *SMTPAccount) error {
 		INSERT INTO smtp_accounts (`+accountColumns+`)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
 		a.ID, a.Username, a.PasswordHash, a.Description, a.DefaultMailboxID,
-		a.FromPolicy, cidrs, a.RateLimitPerMin, a.Enabled, a.LastUsedAt,
+		a.FromPolicy, cidrs, a.RateLimitPerMin, a.Enabled, utcNull(a.LastUsedAt),
 		a.ManagedBy, a.CreatedAt, a.UpdatedAt)
 	return translateError(r.db.Dialect(), err, "SMTP account "+a.Username)
 }
