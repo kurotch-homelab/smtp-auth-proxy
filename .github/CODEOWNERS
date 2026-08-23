@@ -1,0 +1,11 @@
+# Default owner for everything in the repository.
+*                       @kurotch-homelab/prj-smtp-auth-proxy-developers
+
+# Anything that touches how mail is authenticated or relayed deserves a
+# second pair of eyes even when the change looks mechanical.
+/internal/oauth/        @kurotch-homelab/prj-smtp-auth-proxy-developers
+/internal/policy/       @kurotch-homelab/prj-smtp-auth-proxy-developers
+/internal/transport/    @kurotch-homelab/prj-smtp-auth-proxy-developers
+/internal/adminauth/    @kurotch-homelab/prj-smtp-auth-proxy-developers
+/internal/crypto/       @kurotch-homelab/prj-smtp-auth-proxy-developers
+/.github/workflows/     @kurotch-homelab/prj-smtp-auth-proxy-developers

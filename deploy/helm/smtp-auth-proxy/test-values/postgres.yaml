@@ -1,0 +1,14 @@
+# The multi-replica variant: postgres driver, rolling updates.
+#
+# Lives outside ci/ deliberately: chart-testing installs every ci/*-values.yaml
+# on a kind cluster that has no PostgreSQL, and a proxy whose readiness probe
+# pings an unreachable database times the whole job out. This file is a
+# render-only fixture for `make helm-lint`.
+encryption:
+  existingSecret: smtp-auth-proxy-test-encryption
+replicaCount: 2
+database:
+  driver: postgres
+  dsn: postgres://proxy:proxy@postgres:5432/proxy?sslmode=disable
+persistence:
+  enabled: false

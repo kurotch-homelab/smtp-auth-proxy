@@ -1,0 +1,14 @@
+apiVersion: v2
+name: smtp-auth-proxy
+description: >-
+  An SMTP relay that lets LAN devices which only speak SMTP-AUTH keep sending
+  mail through Microsoft 365, which requires OAuth 2.0.
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+home: https://github.com/kurotch-homelab/smtp-auth-proxy
+sources:
+  - https://github.com/kurotch-homelab/smtp-auth-proxy
+maintainers:
+  - name: kurotch-homelab
+    url: https://github.com/kurotch-homelab

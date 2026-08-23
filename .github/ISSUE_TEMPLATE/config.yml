@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/kurotch-homelab/smtp-auth-proxy/discussions
+    about: Ask about usage, deployment, or design before opening an issue.

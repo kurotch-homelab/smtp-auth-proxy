@@ -1,0 +1,33 @@
+smtp-auth-proxy {{ .Chart.AppVersion }} is deployed.
+
+1. Create the first administrator (once):
+
+   kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "smtp-auth-proxy.fullname" . }} -- \
+     /usr/local/bin/smtp-auth-proxy adduser \
+       --config /etc/smtp-auth-proxy/config.yaml --username admin
+
+   The generated password is printed once.
+
+2. Reach the admin interface:
+{{- if .Values.admin.ingress.enabled }}
+{{- range .Values.admin.ingress.hosts }}
+   https://{{ .host }}
+{{- end }}
+{{- else }}
+
+   kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "smtp-auth-proxy.fullname" . }}-admin {{ .Values.admin.service.port }}:{{ .Values.admin.service.port }}
+   open http://localhost:{{ .Values.admin.service.port }}
+{{- end }}
+
+3. Point LAN devices at the SMTP service:
+
+   kubectl -n {{ .Release.Namespace }} get svc {{ include "smtp-auth-proxy.fullname" . }}-smtp
+
+Add a credential and mailbox in the admin interface; its setup dialog
+generates the Exchange Online PowerShell with your values filled in.
+{{- if and (eq .Values.database.driver "sqlite") (eq (int .Values.replicaCount) 1) }}
+
+Note: with SQLite the Deployment uses the Recreate strategy, so upgrades stop
+the proxy briefly. Devices retry, and the queue picks up where it left off.
+For rolling upgrades, move to database.driver=postgres.
+{{- end }}

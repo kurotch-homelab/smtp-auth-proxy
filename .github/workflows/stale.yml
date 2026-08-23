@@ -1,0 +1,40 @@
+name: Stale issues and PRs
+
+on:
+  schedule:
+    - cron: '13 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
+        with:
+          days-before-stale: 60
+          days-before-close: 14
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: 'bug,security,pinned,roadmap'
+          exempt-pr-labels: 'security,pinned'
+          # Dependabot closes and reopens its own PRs; leave them alone.
+          exempt-all-milestones: true
+          stale-issue-message: >
+            This issue has had no activity for 60 days. It will close in 14 days
+            unless something else happens here. If it is still relevant, a comment
+            saying so is enough to keep it open.
+          stale-pr-message: >
+            This pull request has had no activity for 60 days and will close in 14
+            days. Comment or push to keep it open.
+          close-issue-message: >
+            Closing after 74 days without activity. Please reopen if this is still
+            happening.
+          close-pr-message: >
+            Closing after 74 days without activity. Please reopen if you would like
+            to continue.

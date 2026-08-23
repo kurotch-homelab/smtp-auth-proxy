@@ -1,0 +1,4 @@
+# Values used by chart-testing: the guard requiring an encryption Secret is
+# satisfied with a name the install job creates first.
+encryption:
+  existingSecret: smtp-auth-proxy-test-encryption

@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "smtp-auth-proxy.fullname" . }}
+  labels: {{- include "smtp-auth-proxy.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if eq .Values.database.driver "sqlite" }}
+  # SQLite allows one writer on one volume, so the old pod has to release it
+  # before the new one starts. Rolling would deadlock on the PVC.
+  strategy:
+    type: Recreate
+  {{- else }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  {{- end }}
+  selector:
+    matchLabels: {{- include "smtp-auth-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "smtp-auth-proxy.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}{{- toYaml . | nindent 8 }}{{- end }}
+      annotations:
+        # Configuration changes restart the pods; without this a `helm upgrade`
+        # that only edits the ConfigMap changes nothing until something else
+        # happens to restart them.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}{{- toYaml . | nindent 8 }}{{- end }}
+    spec:
+      serviceAccountName: {{ include "smtp-auth-proxy.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        fsGroup: 65532
+      containers:
+        - name: proxy
+          image: '{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}'
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [serve, --config, /etc/smtp-auth-proxy/config.yaml]
+          ports:
+            - name: smtp
+              containerPort: 587
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SMTP_AUTH_PROXY_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.encryption.existingSecret }}
+                  key: {{ .Values.encryption.existingSecretKey }}
+            {{- if and (eq .Values.database.driver "postgres") .Values.database.existingSecret }}
+            - name: SMTP_AUTH_PROXY_DATABASE_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret }}
+                  key: {{ .Values.database.existingSecretKey }}
+            {{- else if eq .Values.database.driver "postgres" }}
+            - name: SMTP_AUTH_PROXY_DATABASE_DSN
+              value: {{ .Values.database.dsn | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/smtp-auth-proxy
+              readOnly: true
+            {{- if and (eq .Values.database.driver "sqlite") .Values.persistence.enabled }}
+            - name: data
+              mountPath: /var/lib/smtp-auth-proxy
+            {{- end }}
+            {{- if .Values.smtp.tls.existingSecret }}
+            - name: smtp-tls
+              mountPath: /etc/smtp-auth-proxy/tls
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "smtp-auth-proxy.fullname" . }}
+        {{- if and (eq .Values.database.driver "sqlite") .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "smtp-auth-proxy.fullname" . }}
+        {{- end }}
+        {{- if .Values.smtp.tls.existingSecret }}
+        - name: smtp-tls
+          secret:
+            secretName: {{ .Values.smtp.tls.existingSecret }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}

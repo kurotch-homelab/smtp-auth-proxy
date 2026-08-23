@@ -1,0 +1,40 @@
+# Binaries
+# Anchored with a leading slash: a bare `smtp-auth-proxy` would also match the
+# cmd/smtp-auth-proxy source directory and silently exclude it from the repo.
+/bin/
+/dist/
+/smtp-auth-proxy
+
+# Test / coverage
+*.out
+coverage.*
+/testdata/tmp/
+
+# Local state
+*.db
+*.db-shm
+*.db-wal
+/spool/
+/.env
+/config.local.yaml
+/bootstrap.local.yaml
+
+# Web
+/web/node_modules/
+/web/dist/
+/web/coverage/
+/web/playwright-report/
+/web/test-results/
+
+# Tooling state
+/.serena/
+/.claude/
+
+# Editors / OS
+.DS_Store
+.idea/
+*.swp
+
+# Built admin UI (embedded at compile time; the directory itself is tracked)
+/internal/webui/dist/*
+!/internal/webui/dist/.gitkeep

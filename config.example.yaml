@@ -1,0 +1,182 @@
+# smtp-auth-proxy — static configuration.
+#
+# Everything here is read once at startup. Mailboxes, OAuth credentials and
+# SMTP accounts are runtime data: manage them in the admin UI, or declare them
+# in a bootstrap file (see the `bootstrap` section at the bottom).
+#
+# Any value may reference the environment:
+#   ${VAR}            required; startup fails if it is unset
+#   ${VAR:-fallback}  optional, with a literal default
+#   ${file:/run/secrets/x}   the contents of a file, whitespace trimmed
+#   $${literal}       an escaped dollar sign
+
+log:
+  level: info # debug | info | warn | error
+  format: json # json | text
+  # Subjects can contain personal data, so they stay out of logs by default.
+  include_subjects: false
+
+database:
+  driver: sqlite # sqlite | postgres
+  dsn: /var/lib/smtp-auth-proxy/data.db
+  # For PostgreSQL:
+  #   driver: postgres
+  #   dsn: ${DATABASE_URL}
+  max_open_conns: 0 # 0 = unlimited
+  max_idle_conns: 2
+  conn_max_lifetime: 1h
+  auto_migrate: true
+
+encryption:
+  # Generate with: smtp-auth-proxy genkey
+  # The first key seals new secrets; later keys are kept so values written
+  # before a rotation stay readable.
+  keys:
+    - ${SMTP_AUTH_PROXY_ENCRYPTION_KEY}
+    # - ${SMTP_AUTH_PROXY_ENCRYPTION_KEY_PREVIOUS:-}
+
+storage:
+  # db keeps message bodies in the database, so several replicas can share a
+  # PostgreSQL backend with no shared volume. fs writes them to spool_dir.
+  blob: db
+  spool_dir: /var/lib/smtp-auth-proxy/spool
+  # Exchange Online's default mailbox send limit is 35 MB after encoding.
+  max_message_size: 35MB
+
+smtp:
+  hostname: smtp-auth-proxy.lan
+
+  listeners:
+    - address: ':587'
+      tls: starttls # none | starttls | implicit
+      require_tls: true
+      require_auth: true
+    # - address: ":465"
+    #   tls: implicit
+    #   require_tls: true
+    #   require_auth: true
+
+  tls:
+    cert_file: /etc/smtp-auth-proxy/tls/tls.crt
+    key_file: /etc/smtp-auth-proxy/tls/tls.key
+    # Generates a certificate in memory at startup. Every client has to be told
+    # to trust it, so this is for a first run or a test lab only.
+    self_signed: false
+    # Many multifunction printers cannot negotiate TLS 1.3.
+    min_version: '1.2'
+
+  # Allows AUTH on an unencrypted connection. Only for devices with no TLS
+  # support at all; their password crosses the network in the clear.
+  allow_insecure_auth: false
+
+  max_recipients: 100
+  max_connections: 100
+  max_connections_per_ip: 10
+  max_auth_failures: 5
+  read_timeout: 5m
+  write_timeout: 5m
+
+  # Recovers the real client address behind a TCP load balancer. Only enable it
+  # when the listener is genuinely behind one: otherwise any client could forge
+  # its source address and bypass an account's allowed CIDRs.
+  proxy_protocol:
+    enabled: false
+    trusted_networks: []
+    #  - 10.0.0.0/8
+
+queue:
+  workers: 4
+  lease_duration: 5m
+  poll_interval: 5s
+
+  retry:
+    max_attempts: 12
+    max_age: 72h
+    backoff: [1m, 5m, 15m, 1h, 4h, 12h]
+    jitter: 0.2
+
+  # Exchange Online allows 30 messages/minute and 3 concurrent connections per
+  # mailbox. Staying under both is what keeps "4.7.500 Server busy" away.
+  # A mailbox may lower these individually in the admin UI.
+  default_rate_limit_per_min: 30
+  default_max_concurrent: 2
+
+  retention:
+    sent: 720h # 30 days
+    failed: 720h
+    purge_interval: 1h
+
+# Defaults are correct for worldwide commercial tenants. Sovereign clouds
+# (GCC High, DoD, 21Vianet) override the hosts.
+upstream:
+  smtp:
+    host: smtp.office365.com
+    port: 587
+  graph:
+    endpoint: https://graph.microsoft.com
+  oauth:
+    authority: https://login.microsoftonline.com
+    # Exchange Online requires exactly this scope for SMTP AUTH.
+    smtp_scope: https://outlook.office365.com/.default
+    graph_scope: https://graph.microsoft.com/.default
+  timeout: 2m
+
+admin:
+  address: ':8080'
+  # The externally reachable origin. Required for OIDC, which needs an exact
+  # redirect URI of <base_url>/api/v1/auth/oidc/callback.
+  base_url: https://smtp-auth-proxy.example.com
+
+  # Terminate TLS here only if there is no ingress or reverse proxy in front.
+  tls:
+    cert_file: ''
+    key_file: ''
+
+  session:
+    lifetime: 12h
+    idle_timeout: 1h
+    cookie_secure: auto # auto | true | false
+    cookie_name: sap_session
+
+  local_auth:
+    enabled: true
+    require_totp: false
+    lockout:
+      threshold: 5
+      duration: 15m
+
+  oidc:
+    enabled: false
+    issuer: https://login.microsoftonline.com/${AZURE_TENANT_ID:-common}/v2.0
+    client_id: ${OIDC_CLIENT_ID:-}
+    client_secret: ${OIDC_CLIENT_SECRET:-}
+    scopes: [openid, profile, email]
+    username_claim: preferred_username
+    role_claim: groups
+    role_mappings:
+      # "<claim value>": <admin | operator | viewer>
+      # "11111111-2222-3333-4444-555555555555": admin
+    # Assigned when no mapping matches. Leave empty to deny logins that match
+    # nothing, which is the safe default for a tenant-wide directory.
+    default_role: ''
+    allow_signup: true
+
+  metrics:
+    enabled: true
+    path: /metrics
+
+  # CIDRs whose X-Forwarded-For header is believed, for audit logs and login
+  # rate limiting.
+  trusted_proxies: []
+  #  - 10.0.0.0/8
+
+# Seeds mailboxes, credentials and SMTP accounts from a declarative file.
+#
+#   off         ignore the file entirely
+#   apply-once  create anything missing, then leave the database alone so the
+#               admin UI stays authoritative
+#   reconcile   re-apply on every start and mark the declared objects read-only
+#               in the UI — the GitOps mode
+bootstrap:
+  mode: off
+  path: ''

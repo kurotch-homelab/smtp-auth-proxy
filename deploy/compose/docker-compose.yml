@@ -1,0 +1,42 @@
+# The zero-dependency deployment: one container, SQLite, a named volume.
+#
+#   1. cp .env.example .env, and fill in the generated key
+#   2. docker compose up -d
+#   3. docker compose exec proxy /usr/local/bin/smtp-auth-proxy adduser \
+#        --config /etc/smtp-auth-proxy/config.yaml --username admin
+#   4. open http://localhost:8080
+#
+# For PostgreSQL, add the overlay:
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
+
+services:
+  proxy:
+    image: ghcr.io/kurotch-homelab/smtp-auth-proxy:latest
+    build:
+      context: ../..
+    restart: unless-stopped
+    ports:
+      # Submission with STARTTLS. Port 465 (implicit TLS) can be added in
+      # config.yaml and published here the same way.
+      - '587:587'
+      # The admin interface. Put a reverse proxy with real TLS in front of it
+      # for anything beyond a trusted LAN.
+      - '8080:8080'
+    environment:
+      # Generated once with `smtp-auth-proxy genkey`; it decrypts every stored
+      # secret, so treat it like one.
+      SMTP_AUTH_PROXY_ENCRYPTION_KEY: ${SMTP_AUTH_PROXY_ENCRYPTION_KEY:?run "smtp-auth-proxy genkey" and put the result in .env}
+    volumes:
+      - ./config.yaml:/etc/smtp-auth-proxy/config.yaml:ro
+      - data:/var/lib/smtp-auth-proxy
+    healthcheck:
+      # The binary doubles as its own health probe: distroless has no shell or
+      # curl, and shipping one just for the healthcheck would defeat the point.
+      test: ['CMD', '/usr/local/bin/smtp-auth-proxy', 'healthcheck', '--url', 'http://127.0.0.1:8080/readyz']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  data:

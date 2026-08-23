@@ -1,0 +1,25 @@
+{{- include "smtp-auth-proxy.validate" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "smtp-auth-proxy.fullname" . }}
+  labels: {{- include "smtp-auth-proxy.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    {{- /* The operator's config block, with the sections the chart owns
+           injected so the Secret-backed values arrive via the environment. */}}
+    {{- $config := deepCopy .Values.config }}
+    {{- $database := dict "driver" .Values.database.driver "auto_migrate" true }}
+    {{- if eq .Values.database.driver "postgres" }}
+    {{- $_ := set $database "dsn" "${SMTP_AUTH_PROXY_DATABASE_DSN}" }}
+    {{- else }}
+    {{- $_ := set $database "dsn" .Values.database.dsn }}
+    {{- end }}
+    {{- $_ := set $config "database" $database }}
+    {{- $_ := set $config "encryption" (dict "keys" (list "${SMTP_AUTH_PROXY_ENCRYPTION_KEY}")) }}
+    {{- if .Values.smtp.tls.existingSecret }}
+    {{- $smtp := $config.smtp | default dict }}
+    {{- $_ := set $smtp "tls" (dict "cert_file" "/etc/smtp-auth-proxy/tls/tls.crt" "key_file" "/etc/smtp-auth-proxy/tls/tls.key") }}
+    {{- $_ := set $config "smtp" $smtp }}
+    {{- end }}
+    {{- toYaml $config | nindent 4 }}

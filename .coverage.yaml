@@ -1,0 +1,34 @@
+# Coverage thresholds enforced by `make coverage-check` (and the CI test-go job).
+#
+# `total` applies to every counted package combined. `packages` entries are
+# matched against the package path relative to the module root, longest prefix
+# wins, so a rule on `internal/store` also covers `internal/store/sqlc` unless
+# that path has its own entry.
+total: 75
+
+packages:
+  # Security- and correctness-critical: a regression here silently sends mail
+  # from the wrong mailbox, leaks a secret, or loses a queued message.
+  internal/policy: 90
+  internal/queue: 90
+  internal/crypto: 90
+  internal/logsafe: 90
+  # 86 rather than 90: what remains uncovered is log-and-continue error
+  # handling that needs an injected database failure to reach. Every
+  # authorization and authentication decision itself is covered.
+  internal/adminauth: 86
+
+  # Thin wiring layers with little branching of their own.
+  internal/version: 60
+  internal/metrics: 0
+
+exclude:
+  # Build-time glue with no logic worth asserting on.
+  - internal/tools
+  - cmd/smtp-auth-proxy
+  # Test doubles. They are exercised through the packages that use them, and
+  # per-package coverage only counts a package's own tests, so a threshold here
+  # would measure nothing useful.
+  - internal/testsupport
+  # Vendored Go sources inside npm packages.
+  - web
