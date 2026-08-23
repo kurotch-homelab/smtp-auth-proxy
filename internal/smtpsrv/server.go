@@ -98,6 +98,9 @@ type listener struct {
 const (
 	defaultAuthTimeout   = 10 * time.Second
 	defaultSubmitTimeout = 30 * time.Second
+	// gracePeriod is how long in-flight sessions have to finish once Serve's
+	// context is canceled.
+	gracePeriod = 30 * time.Second
 )
 
 // New builds a Server from Options without binding anything yet.
@@ -173,21 +176,40 @@ func (s *Server) baseContext() context.Context { return s.ctx }
 
 // Serve binds every listener and blocks until they stop.
 //
-// It returns the first error that is not a normal shutdown, after every
-// listener has been closed.
-func (s *Server) Serve() error {
+// When ctx is canceled the listeners are shut down gracefully, so a caller can
+// drive the whole lifecycle from one context rather than pairing Serve with a
+// separate Shutdown. It returns the first error that is not a normal shutdown,
+// after every listener has been closed.
+func (s *Server) Serve(ctx context.Context) error {
 	var (
 		wg    sync.WaitGroup
 		mu    sync.Mutex
 		first error
 	)
 
+	// A cancellation while serving triggers a graceful shutdown.
+	stopped := make(chan struct{})
+	defer close(stopped)
+	go func() {
+		select {
+		case <-ctx.Done():
+			shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), gracePeriod)
+			defer cancel()
+			_ = s.Shutdown(shutdownCtx)
+		case <-stopped:
+		}
+	}()
+
 	for _, l := range s.listeners {
 		netListener, err := s.bind(l)
 		if err != nil {
 			// Close whatever is already up, so a partial start does not leave
-			// the process listening on some ports but not others.
-			_ = s.Shutdown(context.Background())
+			// the process listening on some ports but not others. The caller's
+			// context may already be canceled, which must not prevent the
+			// cleanup from running.
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), gracePeriod)
+			_ = s.Shutdown(cleanupCtx)
+			cancel()
 			s.markReady()
 			return err
 		}

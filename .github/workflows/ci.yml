@@ -107,6 +107,9 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ${{ env.GO_VERSION }}
+      # `make test` includes the end-to-end suite, which drives the wired proxy
+      # the way a LAN device would — connect, STARTTLS, AUTH, send — against
+      # stand-ins for Microsoft Entra and Exchange Online.
       - name: Test
         env:
           # Store tests run against Postgres only in that matrix leg; the SQLite

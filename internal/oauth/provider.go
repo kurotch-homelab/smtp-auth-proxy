@@ -73,6 +73,9 @@ type Provider struct {
 	httpClient *http.Client
 	// instanceDiscovery asks Microsoft which endpoint serves a tenant.
 	instanceDiscovery bool
+	// defaultAuthorityHost is used for credentials that name no authority of
+	// their own.
+	defaultAuthorityHost string
 
 	mu sync.Mutex
 	// clients is keyed by credential identity *and* its material, so editing a
@@ -94,6 +97,18 @@ func WithoutInstanceDiscovery() ProviderOption {
 	return func(p *Provider) { p.instanceDiscovery = false }
 }
 
+// WithDefaultAuthorityHost sets the login host used for credentials that do not
+// name one. Without it every such credential would go to the worldwide
+// commercial cloud regardless of what the deployment configured, which is wrong
+// for a sovereign cloud and impossible to notice until mail stops.
+func WithDefaultAuthorityHost(host string) ProviderOption {
+	return func(p *Provider) {
+		if host != "" {
+			p.defaultAuthorityHost = host
+		}
+	}
+}
+
 type cachedClient struct {
 	client confidential.Client
 	// fingerprint changes whenever the credential's material changes.
@@ -107,10 +122,11 @@ func NewProvider(keyring *appcrypto.Keyring, httpClient *http.Client, opts ...Pr
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
 	p := &Provider{
-		keyring:           keyring,
-		httpClient:        httpClient,
-		instanceDiscovery: true,
-		clients:           make(map[string]*cachedClient),
+		keyring:              keyring,
+		httpClient:           httpClient,
+		instanceDiscovery:    true,
+		defaultAuthorityHost: DefaultAuthorityHost,
+		clients:              make(map[string]*cachedClient),
 	}
 	for _, opt := range opts {
 		opt(p)
@@ -152,7 +168,7 @@ func (p *Provider) Forget(credentialID string) {
 }
 
 func (p *Provider) clientFor(cred *store.OAuthCredential) (confidential.Client, error) {
-	fingerprint := fingerprintOf(cred)
+	fingerprint := p.fingerprintOf(cred)
 
 	p.mu.Lock()
 	cached, ok := p.clients[cred.ID]
@@ -180,7 +196,11 @@ func (p *Provider) buildClient(cred *store.OAuthCredential) (confidential.Client
 		return confidential.Client{}, err
 	}
 
-	authority, err := AuthorityURL(cred.AuthorityHost, cred.TenantID)
+	host := cred.AuthorityHost
+	if host == "" {
+		host = p.defaultAuthorityHost
+	}
+	authority, err := AuthorityURL(host, cred.TenantID)
 	if err != nil {
 		return confidential.Client{}, err
 	}
@@ -265,11 +285,12 @@ const DefaultAuthorityHost = "https://login.microsoftonline.com"
 
 // fingerprintOf changes whenever anything that affects token acquisition
 // changes, so an edited credential is not served from a stale client.
-func fingerprintOf(cred *store.OAuthCredential) string {
+func (p *Provider) fingerprintOf(cred *store.OAuthCredential) string {
 	h := sha256.New()
 	for _, part := range []string{
 		cred.TenantID, cred.ClientID, string(cred.AuthType), cred.AuthorityHost,
 		cred.ClientSecretEnc, cred.CertificatePEM, cred.CertificateKeyEnc,
+		p.defaultAuthorityHost,
 	} {
 		h.Write([]byte(part))
 		h.Write([]byte{0})

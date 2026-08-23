@@ -433,3 +433,74 @@ func ExampleBuildXOAuth2() {
 	// Output:
 	// "user=shared@example.com\x01auth=Bearer T0K3N\x01\x01"
 }
+
+// The configured authority must apply to credentials that do not name one.
+// Without this the provider silently used the worldwide commercial cloud
+// whatever the deployment configured, which is wrong for a sovereign cloud and
+// invisible until mail stops.
+func TestProviderUsesTheConfiguredDefaultAuthority(t *testing.T) {
+	t.Parallel()
+
+	entra := startFakeEntra(t)
+	kr := keyring(t)
+
+	// No AuthorityHost on the credential itself.
+	cred := secretCredential(t, kr, "")
+
+	p := oauth.NewProvider(kr, entra.server.Client(),
+		oauth.WithoutInstanceDiscovery(),
+		oauth.WithDefaultAuthorityHost(entra.server.URL))
+
+	if _, err := p.Token(t.Context(), cred, exchangeScope); err != nil {
+		t.Fatalf("Token: %v", err)
+	}
+	if n := len(entra.tokenRequests()); n != 1 {
+		t.Errorf("the configured authority saw %d requests, want 1", n)
+	}
+}
+
+func TestCredentialAuthorityOverridesTheDefault(t *testing.T) {
+	t.Parallel()
+
+	entra := startFakeEntra(t)
+	kr := keyring(t)
+
+	// A credential that names its own authority wins over the default, which is
+	// how one deployment can serve tenants in different clouds.
+	cred := secretCredential(t, kr, entra.server.URL)
+
+	p := oauth.NewProvider(kr, entra.server.Client(),
+		oauth.WithoutInstanceDiscovery(),
+		oauth.WithDefaultAuthorityHost("https://login.microsoftonline.us"))
+
+	if _, err := p.Token(t.Context(), cred, exchangeScope); err != nil {
+		t.Fatalf("Token: %v", err)
+	}
+	if n := len(entra.tokenRequests()); n != 1 {
+		t.Errorf("the credential's own authority saw %d requests, want 1", n)
+	}
+}
+
+func TestChangingTheDefaultAuthorityRebuildsTheClient(t *testing.T) {
+	t.Parallel()
+
+	entra := startFakeEntra(t)
+	kr := keyring(t)
+	cred := secretCredential(t, kr, "")
+
+	// Two providers with different defaults must not share a cached client for
+	// the same credential.
+	wrong := oauth.NewProvider(kr, entra.server.Client(),
+		oauth.WithoutInstanceDiscovery(),
+		oauth.WithDefaultAuthorityHost("https://127.0.0.1:1"))
+	if _, err := wrong.Token(t.Context(), cred, exchangeScope); err == nil {
+		t.Fatal("a token was issued by an unreachable authority")
+	}
+
+	right := oauth.NewProvider(kr, entra.server.Client(),
+		oauth.WithoutInstanceDiscovery(),
+		oauth.WithDefaultAuthorityHost(entra.server.URL))
+	if _, err := right.Token(t.Context(), cred, exchangeScope); err != nil {
+		t.Fatalf("Token: %v", err)
+	}
+}

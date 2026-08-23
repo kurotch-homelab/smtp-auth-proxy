@@ -154,8 +154,9 @@ func startServer(t *testing.T, mutate func(*Options)) *harness {
 		t.Fatalf("New: %v", err)
 	}
 
+	serveCtx, stopServe := context.WithCancel(context.Background())
 	done := make(chan error, 1)
-	go func() { done <- srv.Serve() }()
+	go func() { done <- srv.Serve(serveCtx) }()
 
 	select {
 	case <-srv.Ready():
@@ -170,6 +171,7 @@ func startServer(t *testing.T, mutate func(*Options)) *harness {
 	addr := addrs[0]
 
 	t.Cleanup(func() {
+		stopServe()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = srv.Shutdown(ctx)

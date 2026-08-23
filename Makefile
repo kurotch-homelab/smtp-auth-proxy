@@ -88,8 +88,12 @@ fmt: $(TOOLS_DIR)/gofumpt ## Format Go and web sources in place
 ##@ Test
 
 .PHONY: test
-test: ## Unit + integration tests (SQLite; set TEST_POSTGRES_DSN for Postgres too)
-	go test -race -covermode=atomic -coverprofile=coverage.out $(GO_PACKAGES)
+test: ## All tests, end-to-end included (SQLite; set TEST_POSTGRES_DSN for Postgres too)
+	go test -race -tags=e2e -covermode=atomic -coverprofile=coverage.out $(GO_PACKAGES)
+
+.PHONY: test-unit
+test-unit: ## Tests without the end-to-end suite, for a faster inner loop
+	go test -race $(GO_PACKAGES)
 
 .PHONY: postgres-up
 postgres-up: ## Start a throwaway PostgreSQL for the store tests

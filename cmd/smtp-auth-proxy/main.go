@@ -45,6 +45,8 @@ type command struct {
 func commands() []command {
 	return []command{
 		{"serve", "Run the SMTP proxy and admin API", runServe},
+		{"genkey", "Generate an encryption key for secrets at rest", runGenkey},
+		{"passwd", "Hash an SMTP account password (generates one if omitted)", runPasswd},
 		{"version", "Print build information", runVersion},
 	}
 }
@@ -88,15 +90,4 @@ func runVersion(_ context.Context, args []string, stdout, stderr *os.File) error
 	}
 	fmt.Fprintln(stdout, version.Get())
 	return nil
-}
-
-func runServe(_ context.Context, args []string, _, stderr *os.File) error {
-	fs := flag.NewFlagSet("serve", flag.ContinueOnError)
-	fs.SetOutput(stderr)
-	configPath := fs.String("config", "config.yaml", "path to config.yaml")
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-	// Wired up in the store/smtpsrv/queue phases.
-	return fmt.Errorf("serve is not implemented yet (config %q)", *configPath)
 }

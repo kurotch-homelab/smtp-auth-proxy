@@ -183,7 +183,22 @@ type Upstream struct {
 	SMTP    UpstreamSMTP  `yaml:"smtp"`
 	Graph   UpstreamGraph `yaml:"graph"`
 	OAuth   UpstreamOAuth `yaml:"oauth"`
+	TLS     UpstreamTLS   `yaml:"tls"`
 	Timeout Duration      `yaml:"timeout"`
+}
+
+// UpstreamTLS adjusts how the proxy trusts Microsoft 365's certificates.
+//
+// The defaults are correct for the public internet. These exist for two real
+// situations: an enterprise network that intercepts outbound TLS with its own
+// certificate authority, and a test lab pointing the proxy at a stand-in.
+type UpstreamTLS struct {
+	// CAFile is a PEM bundle to trust in addition to the system roots.
+	CAFile string `yaml:"ca_file"`
+	// InsecureSkipVerify disables certificate verification entirely. It makes
+	// the connection interceptable by anyone on the path, and the proxy sends a
+	// bearer token over it, so this is for a test lab and nothing else.
+	InsecureSkipVerify bool `yaml:"insecure_skip_verify"`
 }
 
 // UpstreamSMTP is the Exchange Online submission endpoint.

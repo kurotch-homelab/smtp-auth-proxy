@@ -440,6 +440,9 @@ func (c *Config) Warnings() []string {
 	if c.Log.IncludeSubjects {
 		w = append(w, "log.include_subjects is enabled: message subjects, which may contain personal data, are written to the logs")
 	}
+	if c.Upstream.TLS.InsecureSkipVerify {
+		w = append(w, "upstream.tls.insecure_skip_verify is enabled: the connection to Microsoft 365 is not verified, and the OAuth bearer token it carries is exposed to anyone on the network path")
+	}
 
 	return w
 }
