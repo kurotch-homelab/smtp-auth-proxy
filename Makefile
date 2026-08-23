@@ -156,9 +156,19 @@ compose-down: ## Stop the Docker Compose stack
 	docker compose -f deploy/compose/docker-compose.yml down -v
 
 .PHONY: helm-lint
-helm-lint: ## Lint the Helm chart
-	helm lint deploy/helm/smtp-auth-proxy
-	helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy >/dev/null
+helm-lint: ## Lint the Helm chart and render every variant
+	helm lint deploy/helm/smtp-auth-proxy -f deploy/helm/smtp-auth-proxy/ci/default-values.yaml
+	helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
+		-f deploy/helm/smtp-auth-proxy/ci/default-values.yaml >/dev/null
+	helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
+		-f deploy/helm/smtp-auth-proxy/ci/postgres-values.yaml >/dev/null
+	@# The guard itself must keep firing: rendering the forbidden combination
+	@# has to fail, or the protection quietly rotted.
+	@if helm template smtp-auth-proxy deploy/helm/smtp-auth-proxy \
+		-f deploy/helm/smtp-auth-proxy/ci/default-values.yaml \
+		--set replicaCount=2 >/dev/null 2>&1; then \
+		echo "::error::the sqlite+replicas guard no longer fires"; exit 1; \
+	fi
 
 ##@ Web assets
 
