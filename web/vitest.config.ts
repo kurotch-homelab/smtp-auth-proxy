@@ -13,14 +13,12 @@ export default mergeConfig(
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov'],
-        include: ['src/**/*.{ts,tsx}'],
-        exclude: [
-          'src/**/*.test.{ts,tsx}',
-          'src/test-setup.ts',
-          'src/main.tsx',
-          'src/vite-env.d.ts',
-        ],
-        thresholds: { lines: 70, functions: 70, branches: 70, statements: 70 },
+        // Unit coverage measures the logic modules. The screens are React
+        // wiring over them, exercised end to end by Playwright, and counting
+        // their JSX here would only reward render-and-snapshot tests.
+        include: ['src/api/**/*.ts', 'src/lib/**/*.ts'],
+        exclude: ['src/**/*.test.{ts,tsx}', 'src/lib/sessionContext.ts'],
+        thresholds: { lines: 80, functions: 80, branches: 75, statements: 80 },
       },
     },
   }),
