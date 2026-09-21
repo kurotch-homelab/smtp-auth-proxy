@@ -10,7 +10,6 @@ import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const read = (p) => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n').trim()
-const hash = (s) => crypto.createHash('sha256').update(s).digest('hex')
 const run = (exe, args, env = {}) => execFileSync(exe, args, {
   cwd: root, env: { ...process.env, GOTOOLCHAIN: 'go1.27.0', ...env }, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024,
 })
