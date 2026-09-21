@@ -25,7 +25,7 @@ func TestHandler(t *testing.T) {
 	} {
 		t.Run(tc.url, func(t *testing.T) {
 			response := httptest.NewRecorder()
-			Handler(response, httptest.NewRequest(http.MethodGet, tc.url, nil))
+			Handler(response, httptest.NewRequest(http.MethodGet, tc.url, http.NoBody))
 			if response.Code != http.StatusOK {
 				t.Fatalf("status = %d", response.Code)
 			}
