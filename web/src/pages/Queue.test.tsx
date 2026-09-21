@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
@@ -52,6 +52,22 @@ function setup(url: string) {
     </FluentProvider>,
   )
 }
+it('keeps the same dialog when a direct detail request finishes', async () => {
+  vi.spyOn(api.messages, 'list').mockResolvedValue({ items: [], total: 0 })
+  let resolve!: (value: Message) => void
+  vi.spyOn(api.messages, 'get').mockReturnValue(
+    new Promise<Message>((done) => {
+      resolve = done
+    }),
+  )
+  setup('/messages?message=message-1')
+  const loadingDialog = await screen.findByRole('dialog')
+  await act(() => {
+    resolve(message)
+  })
+  await screen.findByRole('button', { name: 'Send now' })
+  expect(screen.getByRole('dialog')).toBe(loadingDialog)
+})
 it('loads a direct detail URL independently and forbids sending-state actions', async () => {
   const list = vi.spyOn(api.messages, 'list').mockResolvedValue({ items: [], total: 0 })
   const get = vi.spyOn(api.messages, 'get').mockResolvedValue(message)

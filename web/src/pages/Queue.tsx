@@ -324,127 +324,134 @@ export function QueuePage() {
         )}
       </Card>
 
-      {selectedId && !selected && (
+      {selectedId && (
         <DetailDrawer
-          title="Message details"
-          onClose={() => {
-            change('message', '')
-          }}
-        >
-          {detail.error ? <ErrorNotice error={detail.error} /> : <Spinner />}
-        </DetailDrawer>
-      )}
-      {selected && (
-        <DetailDrawer
-          title={`Message ${selected.id}`}
+          title={selected ? `Message ${selected.id}` : 'Message details'}
           onClose={() => {
             change('message', '')
           }}
           actions={
-            <div className="flex flex-wrap gap-2">
-              {can('queue.manage') && (
-                <>
-                  <Button
-                    disabled={!['failed', 'deferred', 'held'].includes(selected.status)}
-                    busy={act.isPending}
-                    onClick={() => {
-                      act.mutate({ id: selected.id, action: 'retry' })
-                    }}
-                  >
-                    Send now
-                  </Button>
-                  <Button
-                    disabled={!['queued', 'deferred', 'failed'].includes(selected.status)}
-                    busy={act.isPending}
-                    onClick={() => {
-                      act.mutate({ id: selected.id, action: 'hold' })
-                    }}
-                  >
-                    Hold
-                  </Button>
-                  <Button
-                    variant="danger"
-                    disabled={selected.status === 'sending'}
-                    busy={act.isPending}
-                    onClick={() => {
-                      void (async () => {
-                        if (
-                          await confirm(
-                            selected.status === 'sent'
-                              ? 'Delete history and body? This cannot be undone.'
-                              : 'Discard this message? It cannot be recovered.',
-                          )
-                        ) {
-                          act.mutate({ id: selected.id, action: 'delete' })
-                        }
-                      })()
-                    }}
-                  >
-                    {selected.status === 'sent' ? 'Delete history and body' : 'Discard'}
-                  </Button>
-                </>
-              )}
-              {/* Downloading the message means reading somebody's mail, so only
+            selected && (
+              <div className="flex flex-wrap gap-2">
+                {can('queue.manage') && (
+                  <>
+                    <Button
+                      disabled={!['failed', 'deferred', 'held'].includes(selected.status)}
+                      busy={act.isPending}
+                      onClick={() => {
+                        act.mutate({ id: selected.id, action: 'retry' })
+                      }}
+                    >
+                      Send now
+                    </Button>
+                    <Button
+                      disabled={!['queued', 'deferred', 'failed'].includes(selected.status)}
+                      busy={act.isPending}
+                      onClick={() => {
+                        act.mutate({ id: selected.id, action: 'hold' })
+                      }}
+                    >
+                      Hold
+                    </Button>
+                    <Button
+                      variant="danger"
+                      disabled={selected.status === 'sending'}
+                      busy={act.isPending}
+                      onClick={() => {
+                        void (async () => {
+                          if (
+                            await confirm(
+                              selected.status === 'sent'
+                                ? 'Delete history and body? This cannot be undone.'
+                                : 'Discard this message? It cannot be recovered.',
+                            )
+                          ) {
+                            act.mutate({ id: selected.id, action: 'delete' })
+                          }
+                        })()
+                      }}
+                    >
+                      {selected.status === 'sent' ? 'Delete history and body' : 'Discard'}
+                    </Button>
+                  </>
+                )}
+                {/* Downloading the message means reading somebody's mail, so only
                   an administrator is offered it. */}
-              {can('queue.read_body') && (
-                <a
-                  href={api.messages.bodyUrl(selected.id)}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-border/40"
+                {can('queue.read_body') && (
+                  <a
+                    href={api.messages.bodyUrl(selected.id)}
+                    className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-border/40"
+                  >
+                    Download
+                  </a>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    change('message', '')
+                  }}
                 >
-                  Download
-                </a>
-              )}
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  change('message', '')
-                }}
-              >
-                Close
-              </Button>
-            </div>
+                  Close
+                </Button>
+              </div>
+            )
           }
         >
-          <ErrorNotice error={act.error} />
-          <div className="mb-4 flex flex-wrap gap-3">
-            {selected.mailboxId && (
-              <Link to={`/mailboxes?id=${selected.mailboxId}`}>Mailbox details</Link>
-            )}
-            {selected.smtpAccountId && (
-              <Link to={`/accounts?id=${selected.smtpAccountId}`}>SMTP account details</Link>
-            )}
-          </div>
-          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-            <Detail
-              label="Submission"
-              value={selected.origin === 'diagnostic' ? 'Diagnostic test' : 'SMTP submission'}
-            />
-            <Detail label="Status" value={selected.status} />
-            <Detail label="Submitted by" value={selected.accountUsername ?? '—'} />
-            <Detail label="Sent as" value={selected.mailboxAddress ?? '—'} />
-            <Detail label="Envelope sender" value={selected.envelopeFrom} />
-            <Detail label="From header" value={selected.headerFrom ?? '—'} />
-            <Detail label="Recipients" value={selected.recipients.join(', ')} />
-            <Detail label="Size" value={formatBytes(selected.sizeBytes)} />
-            <Detail label="Client address" value={selected.clientIp ?? '—'} />
-            <Detail label="Received" value={formatDateTime(selected.receivedAt)} />
-            <Detail label="Attempts" value={String(selected.attempts)} />
-            {selected.nextAttemptAt && (
-              <Detail label="Next attempt" value={formatRelative(selected.nextAttemptAt)} />
-            )}
-            {selected.sentAt && (
-              <Detail label="Accepted by Microsoft 365" value={formatDateTime(selected.sentAt)} />
-            )}
-          </dl>
+          {!selected ? (
+            detail.error ? (
+              <ErrorNotice error={detail.error} />
+            ) : (
+              <Spinner />
+            )
+          ) : (
+            <>
+              <ErrorNotice error={act.error} />
+              <div className="mb-4 flex flex-wrap gap-3">
+                {selected.mailboxId && (
+                  <Link to={`/mailboxes?id=${selected.mailboxId}`}>Mailbox details</Link>
+                )}
+                {selected.smtpAccountId && (
+                  <Link to={`/accounts?id=${selected.smtpAccountId}`}>SMTP account details</Link>
+                )}
+              </div>
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                <Detail
+                  label="Submission"
+                  value={selected.origin === 'diagnostic' ? 'Diagnostic test' : 'SMTP submission'}
+                />
+                <Detail label="Status" value={selected.status} />
+                <Detail label="Submitted by" value={selected.accountUsername ?? '—'} />
+                <Detail label="Sent as" value={selected.mailboxAddress ?? '—'} />
+                <Detail label="Envelope sender" value={selected.envelopeFrom} />
+                <Detail label="From header" value={selected.headerFrom ?? '—'} />
+                <Detail label="Recipients" value={selected.recipients.join(', ')} />
+                <Detail label="Size" value={formatBytes(selected.sizeBytes)} />
+                <Detail label="Client address" value={selected.clientIp ?? '—'} />
+                <Detail label="Received" value={formatDateTime(selected.receivedAt)} />
+                <Detail label="Attempts" value={String(selected.attempts)} />
+                {selected.nextAttemptAt && (
+                  <Detail label="Next attempt" value={formatRelative(selected.nextAttemptAt)} />
+                )}
+                {selected.sentAt && (
+                  <Detail
+                    label="Accepted by Microsoft 365"
+                    value={formatDateTime(selected.sentAt)}
+                  />
+                )}
+              </dl>
 
-          {selected.lastError && (
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wide text-ink-muted">Last error</p>
-              <p className="mt-1 text-sm">
-                {selected.lastErrorCode && <code className="mr-2">{selected.lastErrorCode}</code>}
-                {selected.lastError}
-              </p>
-            </div>
+              {selected.lastError && (
+                <div className="mt-4">
+                  <p className="text-xs uppercase tracking-wide text-ink-muted">Last error</p>
+                  <p className="mt-1 text-sm">
+                    {selected.lastErrorCode && (
+                      <code className="mr-2">{selected.lastErrorCode}</code>
+                    )}
+                    {selected.lastError}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </DetailDrawer>
       )}
