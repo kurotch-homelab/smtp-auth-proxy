@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,7 +20,7 @@ const messageColumns = `
 	envelope_from, header_from, recipients, recipient_count, size_bytes,
 	subject, message_id, status, attempts, next_attempt_at,
 	lease_owner, lease_expires_at, last_error, last_error_code,
-	last_error_permanent, client_ip, blob_ref, received_at, sent_at, updated_at`
+	last_error_permanent, client_ip, blob_ref, received_at, sent_at, updated_at, origin`
 
 func scanMessage(row interface{ Scan(...any) error }) (*Message, error) {
 	var (
@@ -31,7 +32,7 @@ func scanMessage(row interface{ Scan(...any) error }) (*Message, error) {
 		&m.EnvelopeFrom, &m.HeaderFrom, &recipients, &m.RecipientCount, &m.SizeBytes,
 		&m.Subject, &m.MessageID, &m.Status, &m.Attempts, &m.NextAttemptAt,
 		&m.LeaseOwner, &m.LeaseExpiresAt, &m.LastError, &m.LastErrorCode,
-		&m.LastErrorPermanent, &m.ClientIP, &m.BlobRef, &m.ReceivedAt, &m.SentAt, &m.UpdatedAt,
+		&m.LastErrorPermanent, &m.ClientIP, &m.BlobRef, &m.ReceivedAt, &m.SentAt, &m.UpdatedAt, &m.Origin,
 	)
 	if err != nil {
 		return nil, err
@@ -49,6 +50,13 @@ func scanMessage(row interface{ Scan(...any) error }) (*Message, error) {
 // body may be nil when storage.blob is fs, in which case the caller has already
 // written the file and set BlobRef.
 func (r *MessageRepo) Enqueue(ctx context.Context, m *Message, body []byte) error {
+	return r.db.InTx(ctx, func(tx *Tx) error { return r.enqueueTx(ctx, tx, m, body) })
+}
+
+func (r *MessageRepo) enqueueTx(ctx context.Context, tx *Tx, m *Message, body []byte) error {
+	if m.Origin == "" {
+		m.Origin = "smtp"
+	}
 	if m.ID == "" {
 		m.ID = NewID()
 	}
@@ -74,28 +82,26 @@ func (r *MessageRepo) Enqueue(ctx context.Context, m *Message, body []byte) erro
 		return err
 	}
 
-	return r.db.InTx(ctx, func(tx *Tx) error {
-		_, err := tx.ExecContext(ctx, tx.Rebind(`
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
 			INSERT INTO messages (`+messageColumns+`)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
-			m.ID, m.SMTPAccountID, m.MailboxID, m.AccountUsername, m.MailboxAddress,
-			m.EnvelopeFrom, m.HeaderFrom, recipients, m.RecipientCount, m.SizeBytes,
-			m.Subject, m.MessageID, m.Status, m.Attempts, m.NextAttemptAt,
-			m.LeaseOwner, m.LeaseExpiresAt, m.LastError, m.LastErrorCode,
-			m.LastErrorPermanent, m.ClientIP, m.BlobRef, m.ReceivedAt, m.SentAt, m.UpdatedAt)
-		if err != nil {
-			return translateError(r.db.Dialect(), err, "message "+m.ID)
-		}
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+		m.ID, m.SMTPAccountID, m.MailboxID, m.AccountUsername, m.MailboxAddress,
+		m.EnvelopeFrom, m.HeaderFrom, recipients, m.RecipientCount, m.SizeBytes,
+		m.Subject, m.MessageID, m.Status, m.Attempts, m.NextAttemptAt,
+		m.LeaseOwner, m.LeaseExpiresAt, m.LastError, m.LastErrorCode,
+		m.LastErrorPermanent, m.ClientIP, m.BlobRef, m.ReceivedAt, m.SentAt, m.UpdatedAt, m.Origin)
+	if err != nil {
+		return translateError(r.db.Dialect(), err, "message "+m.ID)
+	}
 
-		if body == nil {
-			return nil
-		}
-		if _, err := tx.ExecContext(ctx,
-			tx.Rebind(`INSERT INTO message_blobs (message_id, content) VALUES (?, ?)`), m.ID, body); err != nil {
-			return fmt.Errorf("store: storing the message body: %w", err)
-		}
+	if body == nil {
 		return nil
-	})
+	}
+	if _, err := tx.ExecContext(ctx,
+		tx.Rebind(`INSERT INTO message_blobs (message_id, content) VALUES (?, ?)`), m.ID, body); err != nil {
+		return fmt.Errorf("store: storing the message body: %w", err)
+	}
+	return nil
 }
 
 // Body returns a message's MIME content from the database.
@@ -267,20 +273,19 @@ func (r *MessageRepo) Fail(ctx context.Context, id, owner string, f Failure) err
 }
 
 // Requeue puts a message back in the queue, for an operator retrying a failure
-// from the admin UI. It clears any lease, so a message stuck in `sending`
-// because its worker vanished can be recovered by hand.
+// from the admin UI. Active deliveries are recovered only by lease expiry.
 func (r *MessageRepo) Requeue(ctx context.Context, id string) error {
 	now := time.Now().UTC()
 	res, err := r.db.ExecContext(ctx, r.db.Rebind(`
 		UPDATE messages SET
 			status = 'queued', next_attempt_at = ?, updated_at = ?,
 			lease_owner = NULL, lease_expires_at = NULL
-		WHERE id = ? AND status IN ('failed', 'deferred', 'held', 'sending')`),
+		WHERE id = ? AND status IN ('failed', 'deferred', 'held')`),
 		now, now, id)
 	if err != nil {
 		return fmt.Errorf("store: requeueing %s: %w", id, err)
 	}
-	return requireOneRow(res, "retryable message "+id)
+	return r.requireAction(ctx, res, id)
 }
 
 // Hold takes a message out of the delivery rotation without discarding it.
@@ -294,16 +299,16 @@ func (r *MessageRepo) Hold(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("store: holding %s: %w", id, err)
 	}
-	return requireOneRow(res, "holdable message "+id)
+	return r.requireAction(ctx, res, id)
 }
 
 // Delete discards a message and its body.
 func (r *MessageRepo) Delete(ctx context.Context, id string) error {
-	res, err := r.db.ExecContext(ctx, r.db.Rebind(`DELETE FROM messages WHERE id = ?`), id)
+	res, err := r.db.ExecContext(ctx, r.db.Rebind(`DELETE FROM messages WHERE id = ? AND status <> 'sending'`), id)
 	if err != nil {
 		return fmt.Errorf("store: deleting %s: %w", id, err)
 	}
-	return requireOneRow(res, "message "+id)
+	return r.requireAction(ctx, res, id)
 }
 
 // ReleaseExpiredLeases returns messages whose worker died back to the queue.
@@ -456,4 +461,21 @@ func (f MessageFilter) build() (where string, args []any) {
 		return "", args
 	}
 	return " WHERE " + strings.Join(clauses, " AND "), args
+}
+
+// ErrStateConflict means an operation lost a race or is invalid in the current state.
+var ErrStateConflict = errors.New("operation conflicts with current state")
+
+func (r *MessageRepo) requireAction(ctx context.Context, res sql.Result, id string) error {
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	if _, err := r.Get(ctx, id); err != nil {
+		return err
+	}
+	return ErrStateConflict
 }

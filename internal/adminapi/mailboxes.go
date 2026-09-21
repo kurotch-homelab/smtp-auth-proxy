@@ -3,6 +3,7 @@ package adminapi
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -58,7 +59,9 @@ func (s *Server) mountMailboxes(r chi.Router) {
 		mr.With(s.require(adminauth.PermManageMailboxes)).Post("/", s.handleCreateMailbox)
 		mr.With(s.require(adminauth.PermManageMailboxes)).Patch("/{id}", s.handleUpdateMailbox)
 		mr.With(s.require(adminauth.PermManageMailboxes)).Delete("/{id}", s.handleDeleteMailbox)
-		mr.With(s.require(adminauth.PermManageMailboxes)).Post("/{id}/test", s.handleTestMailbox)
+		mr.With(s.require(adminauth.PermViewConfig)).Get("/{id}/diagnostics", s.handleMailboxDiagnostics)
+		mr.With(s.require(adminauth.PermRunDiagnostics)).Post("/{id}/test-send", s.handleSendMailboxTest)
+		mr.With(s.require(adminauth.PermRunDiagnostics)).Post("/{id}/test", s.handleTestMailbox)
 	})
 }
 
@@ -287,7 +290,10 @@ func (s *Server) handleTestMailbox(w http.ResponseWriter, r *http.Request) {
 	result := testResponse{Stage: "token"}
 
 	if _, err := s.tokens.Token(ctx, credential, scope); err != nil {
-		result.Message = err.Error()
+		result.Message = "Token acquisition failed. Check the credential and tenant configuration."
+		if code := regexp.MustCompile(`\bAADSTS\d{5,12}\b`).FindString(err.Error()); code != "" {
+			result.Message += " (" + code + ")"
+		}
 		result.Hint = "Check that the client secret or certificate is current, and that the " +
 			"tenant and client IDs match the application registration."
 	} else {

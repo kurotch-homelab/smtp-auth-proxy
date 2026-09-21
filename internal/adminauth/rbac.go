@@ -18,6 +18,7 @@ type Permission string
 // with no entry in rolePermissions is denied to everyone, which is the failure
 // mode to prefer.
 const (
+	PermRunDiagnostics Permission = "diagnostics.run"
 	// PermViewStatus reads the dashboard, queue and delivery history.
 	PermViewStatus Permission = "view.status"
 	// PermViewConfig reads mailboxes, accounts and settings, with secrets
@@ -54,12 +55,14 @@ var rolePermissions = map[store.Role]map[Permission]bool{
 		PermViewConfig: true,
 	},
 	store.RoleOperator: {
-		PermViewStatus:  true,
-		PermViewConfig:  true,
-		PermViewAudit:   true,
-		PermManageQueue: true,
+		PermRunDiagnostics: true,
+		PermViewStatus:     true,
+		PermViewConfig:     true,
+		PermViewAudit:      true,
+		PermManageQueue:    true,
 	},
 	store.RoleAdmin: {
+		PermRunDiagnostics:    true,
 		PermViewStatus:        true,
 		PermViewConfig:        true,
 		PermViewAudit:         true,
@@ -77,6 +80,7 @@ var rolePermissions = map[store.Role]map[Permission]bool{
 // matrix is complete.
 func AllPermissions() []Permission {
 	return []Permission{
+		PermRunDiagnostics,
 		PermViewStatus, PermViewConfig, PermViewAudit,
 		PermManageQueue, PermReadMessageBody,
 		PermManageAccounts, PermManageMailboxes, PermManageCredentials,

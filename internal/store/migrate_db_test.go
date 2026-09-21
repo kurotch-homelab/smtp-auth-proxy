@@ -12,6 +12,7 @@ import (
 // table without updating this list fails the test, which is the point: it is
 // how the two dialects are kept honest.
 var expectedTables = []string{
+	"diagnostic_requests",
 	"admin_sessions",
 	"admin_users",
 	"allowed_senders",

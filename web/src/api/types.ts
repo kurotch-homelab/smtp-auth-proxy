@@ -8,6 +8,7 @@
 export type Role = 'admin' | 'operator' | 'viewer'
 
 export type Permission =
+  | 'diagnostics.run'
   | 'view.status'
   | 'view.config'
   | 'view.audit'
@@ -118,6 +119,9 @@ export interface AccountWithPassword extends Account {
 
 export interface Message {
   id: string
+  smtpAccountId?: string
+  mailboxId?: string
+  origin?: 'smtp' | 'diagnostic'
   accountUsername?: string
   mailboxAddress?: string
   envelopeFrom: string
@@ -182,4 +186,12 @@ export interface ConnectionTest {
 export interface ListResponse<T> {
   items: T[]
   total: number
+}
+
+export interface MailboxDiagnostics {
+  mailbox: Mailbox
+  credential: Credential
+  endpoint: string
+  scope: string
+  verificationScope: string
 }

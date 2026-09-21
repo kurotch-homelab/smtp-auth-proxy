@@ -1,3 +1,8 @@
+import { useListView } from '@/lib/useListView'
+import { ActionsMenu } from '@/components/ActionsMenu'
+import { DetailLink as Link } from '@/components/DetailLink'
+import { ResourceDetails } from '@/components/ResourceDetails'
+import { useConfirm } from '@/components/Confirm'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -18,7 +23,7 @@ import {
   Table,
 } from '@/components/ui'
 import { useSession } from '@/lib/useSession'
-import type { ConnectionTest, Mailbox, Transport } from '@/api/types'
+import type { Mailbox, Transport } from '@/api/types'
 
 interface MailboxForm {
   address: string
@@ -40,17 +45,18 @@ const emptyForm: MailboxForm = {
 
 export function MailboxesPage() {
   const { can } = useSession()
+  const confirm = useConfirm()
   const queryClient = useQueryClient()
 
   const mailboxes = useQuery({ queryKey: ['mailboxes'], queryFn: () => api.mailboxes.list() })
+  const list = useListView(
+    mailboxes.data?.items,
+    (mb) => `${mb.address} ${mb.displayName ?? ''} ${mb.credentialName ?? ''}`,
+  )
   const credentials = useQuery({ queryKey: ['credentials'], queryFn: () => api.credentials.list() })
 
   const [editing, setEditing] = useState<Mailbox | 'new' | undefined>()
   const [form, setForm] = useState<MailboxForm>(emptyForm)
-  const [testResult, setTestResult] = useState<
-    { mailbox: string; result: ConnectionTest } | undefined
-  >()
-
   const save = useMutation({
     mutationFn: (input: { id?: string; body: unknown }) =>
       input.id ? api.mailboxes.update(input.id, input.body) : api.mailboxes.create(input.body),
@@ -65,14 +71,6 @@ export function MailboxesPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['mailboxes'] })
     },
-  })
-
-  const test = useMutation({
-    mutationFn: async (mailbox: Mailbox) => ({
-      mailbox: mailbox.address,
-      result: await api.mailboxes.test(mailbox.id),
-    }),
-    onSuccess: setTestResult,
   })
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fields : {}
@@ -108,6 +106,12 @@ export function MailboxesPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ResourceDetails
+        kind="mailboxes"
+        onEdit={async (id) => {
+          openEditor(await api.mailboxes.get(id))
+        }}
+      />
       <Card
         title="Shared mailboxes"
         actions={
@@ -128,6 +132,7 @@ export function MailboxesPage() {
           can serve many mailboxes.
         </p>
 
+        {list.controls}
         {mailboxes.isLoading ? (
           <Spinner />
         ) : mailboxes.error ? (
@@ -139,11 +144,11 @@ export function MailboxesPage() {
         ) : (
           <>
             <ErrorNotice error={remove.error} className="mb-3" />
-            <ErrorNotice error={test.error} className="mb-3" />
-            <Table headers={['Address', 'Credential', 'Transport', 'Limits', 'State', '']}>
-              {mailboxes.data?.items.map((mb) => (
+            <Table headers={['Address', 'Credential', 'Transport', 'State', '']}>
+              {list.items.map((mb) => (
                 <Row key={mb.id}>
                   <Cell>
+                    <Link to={list.detailUrl(mb.id)}>Details</Link>
                     <span className="font-medium">{mb.address}</span>
                     {mb.displayName && <p className="text-xs text-ink-muted">{mb.displayName}</p>}
                   </Cell>
@@ -151,26 +156,15 @@ export function MailboxesPage() {
                   <Cell>
                     <Badge tone="accent">{mb.transport}</Badge>
                   </Cell>
-                  <Cell className="text-xs text-ink-muted">
-                    {mb.rateLimitPerMin ?? 'default'}/min · {mb.maxConcurrent ?? 'default'} conc.
-                  </Cell>
+
                   <Cell>
                     {mb.enabled ? <Badge tone="success">enabled</Badge> : <Badge>disabled</Badge>}
-                    {mb.managedBy === 'bootstrap' && <Badge tone="accent">bootstrap</Badge>}
+                    {mb.managedBy === 'bootstrap' && (
+                      <Badge tone="accent">Configuration file</Badge>
+                    )}
                   </Cell>
                   <Cell>
-                    <div className="flex flex-wrap gap-1">
-                      {can('mailboxes.manage') && (
-                        <Button
-                          variant="ghost"
-                          busy={test.isPending}
-                          onClick={() => {
-                            test.mutate(mb)
-                          }}
-                        >
-                          Test
-                        </Button>
-                      )}
+                    <ActionsMenu>
                       {can('mailboxes.manage') && mb.managedBy !== 'bootstrap' && (
                         <>
                           <Button
@@ -192,16 +186,18 @@ export function MailboxesPage() {
                           <Button
                             variant="ghost"
                             onClick={() => {
-                              if (confirm(`Delete ${mb.address}?`)) {
-                                remove.mutate(mb.id)
-                              }
+                              void (async () => {
+                                if (await confirm(`Delete ${mb.address}?`)) {
+                                  remove.mutate(mb.id)
+                                }
+                              })()
                             }}
                           >
                             Delete
                           </Button>
                         </>
                       )}
-                    </div>
+                    </ActionsMenu>
                   </Cell>
                 </Row>
               ))}
@@ -343,36 +339,6 @@ export function MailboxesPage() {
             </Button>
           </div>
         </form>
-      </Modal>
-
-      <Modal
-        title={`Connection test — ${testResult?.mailbox ?? ''}`}
-        open={testResult !== undefined}
-        onClose={() => {
-          setTestResult(undefined)
-        }}
-      >
-        {testResult && (
-          <div className="flex flex-col gap-3 text-sm">
-            {testResult.result.ok ? (
-              <Badge tone="success">Token issued</Badge>
-            ) : (
-              <Badge tone="danger">Failed at {testResult.result.stage}</Badge>
-            )}
-            <p>{testResult.result.message}</p>
-            {testResult.result.hint && <p className="text-ink-muted">{testResult.result.hint}</p>}
-            <div className="flex justify-end">
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setTestResult(undefined)
-                }}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
       </Modal>
     </div>
   )

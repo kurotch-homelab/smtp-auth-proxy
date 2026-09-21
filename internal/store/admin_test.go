@@ -273,7 +273,13 @@ func TestSessionLookupRejections(t *testing.T) {
 
 	t.Run("idle too long", func(t *testing.T) {
 		newSession(t, db, u.ID, "idle", time.Now().Add(time.Hour))
-		// A zero idle window means every session looks idle.
+		// Backdate deterministically; Windows clock resolution may make two
+		// consecutive time.Now calls equal.
+		_, err := db.ExecContext(t.Context(), db.Rebind(`UPDATE admin_sessions SET last_seen_at = ? WHERE token_hash = ?`), time.Now().Add(-time.Minute).UTC(), store.HashSessionToken("idle"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		// A tiny idle window rejects the backdated session.
 		if _, err := db.Sessions().Lookup(t.Context(), "idle", time.Nanosecond); !errors.Is(err, store.ErrNotFound) {
 			t.Errorf("Lookup = %v, want ErrNotFound", err)
 		}

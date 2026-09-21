@@ -1,59 +1,345 @@
 @import 'tailwindcss';
 
-/*
- * The palette is defined once, in both schemes, so every screen picks up a
- * theme change rather than each one deciding its own colours.
- */
-@theme {
-  --color-surface: oklch(100% 0 0);
-  --color-surface-raised: oklch(98% 0.003 250);
-  --color-border: oklch(90% 0.006 250);
-  --color-ink: oklch(25% 0.02 250);
-  --color-ink-muted: oklch(52% 0.02 250);
-  --color-accent: oklch(52% 0.16 255);
-  --color-accent-ink: oklch(100% 0 0);
-  --color-danger: oklch(55% 0.19 25);
-  --color-warning: oklch(70% 0.15 75);
-  --color-success: oklch(58% 0.14 155);
+/* Utility colors are aliases of Fluent's webLightTheme, including in portals. */
+@theme inline {
+  --color-surface: var(--colorNeutralBackground1, #ffffff);
+  --color-surface-raised: var(--colorNeutralBackground2, #fafafa);
+  --color-border: var(--colorNeutralStroke2, #e0e0e0);
+  --color-ink: var(--colorNeutralForeground1, #242424);
+  --color-ink-muted: var(--colorNeutralForeground2, #424242);
+  --color-accent: var(--colorBrandBackground, #0f6cbd);
+  --color-accent-ink: var(--colorNeutralForegroundOnBrand, #ffffff);
+  --color-danger: var(--colorPaletteRedForeground1, #b10e1c);
+  --color-warning: var(--colorPaletteDarkOrangeForeground1, #8a3707);
+  --color-success: var(--colorPaletteGreenForeground1, #107c10);
 }
-
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-surface: oklch(20% 0.015 255);
-    --color-surface-raised: oklch(25% 0.018 255);
-    --color-border: oklch(34% 0.02 255);
-    --color-ink: oklch(94% 0.006 255);
-    --color-ink-muted: oklch(72% 0.015 255);
-    --color-accent: oklch(70% 0.14 255);
-    --color-accent-ink: oklch(18% 0.02 255);
-    --color-danger: oklch(68% 0.17 25);
-    --color-warning: oklch(78% 0.14 75);
-    --color-success: oklch(70% 0.13 155);
+html {
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: #f5f5f5;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', system-ui, sans-serif;
+}
+.app-theme {
+  min-height: 100dvh;
+  color-scheme: light;
+}
+:focus-visible {
+  outline: 2px solid var(--colorStrokeFocus2, #000);
+  outline-offset: 2px;
+}
+.app-shell {
+  min-height: 100dvh;
+  background: var(--colorNeutralBackground3);
+}
+.app-topbar {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--colorNeutralBackground1);
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.app-brand-icon {
+  display: flex;
+  padding: 8px;
+  border-radius: var(--borderRadiusMedium);
+  color: var(--colorBrandForeground1);
+  background: var(--colorBrandBackground2);
+}
+.app-brand-label {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--colorNeutralForeground3);
+  border-left: 1px solid var(--colorNeutralStroke2);
+  margin-left: 4px;
+  padding-left: 16px;
+}
+.app-user,
+.app-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-profile {
+  color: inherit;
+  text-decoration: none;
+  font-size: 12px;
+}
+.app-profile small {
+  display: block;
+  color: var(--colorNeutralForeground3);
+  text-transform: capitalize;
+}
+.app-workspace {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: calc(100dvh - 65px);
+}
+.app-sidebar {
+  background: var(--colorNeutralBackground2);
+  border-right: 1px solid var(--colorNeutralStroke2);
+  padding: 24px 12px;
+}
+.app-nav-group + .app-nav-group {
+  margin-top: 28px;
+}
+.app-nav-group > p {
+  color: var(--colorNeutralForeground3);
+  font-weight: 600;
+  font-size: 12px;
+  margin: 0 12px 8px;
+}
+.app-nav-item {
+  display: flex;
+  position: relative;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  border-radius: var(--borderRadiusMedium);
+  margin: 2px 0;
+  padding: 8px 12px;
+  color: var(--colorNeutralForeground2);
+  text-decoration: none;
+}
+.app-nav-item svg {
+  flex-shrink: 0;
+  font-size: 20px;
+}
+.app-nav-item:hover {
+  background: var(--colorNeutralBackground2Hover);
+}
+.app-nav-item.is-active {
+  background: var(--colorNeutralBackground1Selected);
+  color: var(--colorBrandForeground1);
+  font-weight: 600;
+}
+.app-nav-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--colorBrandBackground);
+}
+.app-main {
+  padding: 32px;
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+}
+.app-page-heading {
+  margin-bottom: 28px;
+}
+.app-page-heading h1 {
+  font-size: var(--fontSizeBase600);
+  font-weight: var(--fontWeightSemibold);
+  line-height: var(--lineHeightBase600);
+  margin: 0 0 8px;
+}
+.app-page-heading p {
+  color: var(--colorNeutralForeground2);
+  margin: 0;
+}
+.app-card {
+  border-radius: var(--borderRadiusLarge);
+  background: var(--colorNeutralBackground1);
+  box-shadow: var(--shadow2);
+  min-width: 0;
+}
+.app-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px 16px;
+}
+.app-card-header h2 {
+  font-size: var(--fontSizeBase400);
+  font-weight: var(--fontWeightSemibold);
+  line-height: var(--lineHeightBase400);
+}
+.app-card-body {
+  padding: 8px 24px 24px;
+}
+.app-card:not(:has(> .app-card-header)) > .app-card-body {
+  padding-top: 24px;
+}
+.app-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--colorNeutralForeground2);
+  font-size: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+.app-table td {
+  padding: 14px 12px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--colorNeutralStroke3);
+}
+.app-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.app-table tbody tr:hover {
+  background: var(--colorNeutralBackground1Hover);
+}
+.app-input {
+  min-width: 0;
+}
+.app-dialog.fui-DialogSurface {
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+}
+.app-dialog-content {
+  padding-top: 16px;
+}
+.app-detail-drawer {
+  width: min(640px, 100vw);
+}
+.app-button-danger.fui-Button {
+  background: var(--colorPaletteRedBackground3);
+  color: var(--colorNeutralForegroundOnBrand);
+}
+.app-button-danger.fui-Button:hover {
+  background: var(--colorPaletteRedForeground1);
+}
+.app-stat {
+  padding: 20px 24px;
+  border-radius: var(--borderRadiusLarge);
+  background: var(--colorNeutralBackground1);
+  box-shadow: var(--shadow2);
+}
+.app-stat > p:first-child {
+  color: var(--colorNeutralForeground2);
+  font-size: 14px;
+}
+.app-stat-value {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 600;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.app-skip {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 10;
+  background: white;
+  padding: 8px 16px;
+}
+.app-skip:focus {
+  top: 8px;
+}
+.app-mobile-navigation {
+  display: none;
+}
+.app-attention-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--colorNeutralStroke3);
+}
+.app-attention-row:last-child {
+  border: 0;
+}
+.app-text-link {
+  color: var(--colorBrandForegroundLink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .app-workspace {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .app-main {
+    padding: 24px;
+  }
+  .app-brand-label {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .app-topbar {
+    padding: 12px 16px;
+  }
+  .app-brand {
+    font-size: 14px;
+    gap: 8px;
+  }
+  .app-profile > span:last-child {
+    display: none;
+  }
+  .app-workspace {
+    display: block;
+  }
+  .app-mobile-navigation {
+    display: block;
+    padding: 12px 16px 0;
+  }
+  .app-sidebar {
+    display: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+  }
+  .app-sidebar.is-open {
+    display: block;
+  }
+  .app-main {
+    padding: 24px 16px;
+  }
+  .app-card-header {
+    padding: 16px;
+  }
+  .app-card-body {
+    padding: 4px 16px 16px;
+  }
+  .app-dialog {
+    width: calc(100vw - 24px);
+    padding: 20px;
+  }
+}
+@media (max-width: 640px) {
+  .app-stat {
+    padding: 16px 12px;
+  }
+  .app-stat-value {
+    font-size: 28px;
   }
 }
 
-html {
-  color-scheme: light dark;
+.resource-details a,
+.app-table a,
+footer a {
+  color: var(--colorBrandForegroundLink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-
-body {
-  background: var(--color-surface);
-  color: var(--color-ink);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    'Noto Sans JP',
-    sans-serif;
+.resource-details h2 {
+  font-size: 20px;
+  font-weight: 600;
 }
-
-/* A visible focus ring on everything interactive: keyboard users need it, and
-   removing it is the single most common accessibility regression. */
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+.resource-details h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.resource-details section {
+  padding-top: 16px;
+  border-top: 1px solid var(--colorNeutralStroke2);
 }

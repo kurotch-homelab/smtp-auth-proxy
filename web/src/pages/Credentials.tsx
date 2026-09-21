@@ -1,3 +1,9 @@
+import { useListView } from '@/lib/useListView'
+import { ActionsMenu } from '@/components/ActionsMenu'
+import { DetailLink as Link } from '@/components/DetailLink'
+import { ResourceDetails } from '@/components/ResourceDetails'
+import { useConfirm } from '@/components/Confirm'
+import { Textarea } from '@fluentui/react-components'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -47,10 +53,14 @@ const emptyForm: CredentialForm = {
 
 export function CredentialsPage() {
   const { can } = useSession()
+  const confirm = useConfirm()
   const queryClient = useQueryClient()
 
   const credentials = useQuery({ queryKey: ['credentials'], queryFn: () => api.credentials.list() })
+  const list = useListView(credentials.data?.items, (c) => c.name)
 
+  const [rotating, setRotating] = useState(false)
+  const mailboxes = useQuery({ queryKey: ['mailboxes'], queryFn: api.mailboxes.list })
   const [editing, setEditing] = useState<Credential | 'new' | undefined>()
   const [form, setForm] = useState<CredentialForm>(emptyForm)
   const [setup, setSetup] = useState<{ name: string; data: CredentialSetup } | undefined>()
@@ -81,7 +91,8 @@ export function CredentialsPage() {
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fields : {}
 
-  const openEditor = (credential: Credential | 'new') => {
+  const openEditor = (credential: Credential | 'new', rotate = false) => {
+    setRotating(rotate)
     save.reset()
     setEditing(credential)
     if (credential === 'new') {
@@ -104,13 +115,15 @@ export function CredentialsPage() {
   }
 
   const submit = () => {
-    const body: Record<string, unknown> = {
-      name: form.name,
-      tenantId: form.tenantId,
-      clientId: form.clientId,
-      authType: form.authType,
-      authorityHost: form.authorityHost,
-    }
+    const body: Record<string, unknown> = rotating
+      ? { authType: form.authType }
+      : {
+          name: form.name,
+          tenantId: form.tenantId,
+          clientId: form.clientId,
+          authType: form.authType,
+          authorityHost: form.authorityHost,
+        }
     // Only send secret material that was actually entered: an omitted field
     // leaves the stored value alone.
     if (form.clientSecret !== '') body.clientSecret = form.clientSecret
@@ -123,6 +136,12 @@ export function CredentialsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ResourceDetails
+        kind="credentials"
+        onEdit={async (id, secret) => {
+          openEditor(await api.credentials.get(id), secret)
+        }}
+      />
       <Card
         title="OAuth credentials"
         actions={
@@ -143,6 +162,7 @@ export function CredentialsPage() {
           every mailbox the tenant grants it.
         </p>
 
+        {list.controls}
         {credentials.isLoading ? (
           <Spinner />
         ) : credentials.error ? (
@@ -155,14 +175,13 @@ export function CredentialsPage() {
         ) : (
           <>
             <ErrorNotice error={remove.error} className="mb-3" />
-            <Table headers={['Name', 'Tenant', 'Type', 'Expiry', 'Mailboxes', '']}>
-              {credentials.data?.items.map((c) => (
+            <Table headers={['Name', 'Type', 'Expiry', 'Mailboxes', 'Managed by', '']}>
+              {list.items.map((c) => (
                 <Row key={c.id}>
                   <Cell>
+                    <Link to={list.detailUrl(c.id)}>Details</Link>
                     <span className="font-medium">{c.name}</span>
-                    <p className="text-xs text-ink-muted">{c.clientId}</p>
                   </Cell>
-                  <Cell className="text-xs">{c.tenantId}</Cell>
                   <Cell>
                     <Badge>{c.authType}</Badge>
                   </Cell>
@@ -178,8 +197,9 @@ export function CredentialsPage() {
                     )}
                   </Cell>
                   <Cell>{c.mailboxCount}</Cell>
+                  <Cell>{c.managedBy === 'bootstrap' ? 'Configuration file' : 'Admin center'}</Cell>
                   <Cell>
-                    <div className="flex flex-wrap gap-1">
+                    <ActionsMenu>
                       <Button
                         variant="ghost"
                         busy={loadSetup.isPending}
@@ -202,16 +222,26 @@ export function CredentialsPage() {
                           <Button
                             variant="ghost"
                             onClick={() => {
-                              if (confirm(`Delete ${c.name}?`)) {
-                                remove.mutate(c.id)
-                              }
+                              openEditor(c, true)
+                            }}
+                          >
+                            Update secret
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              void (async () => {
+                                if (await confirm(`Delete ${c.name}?`)) {
+                                  remove.mutate(c.id)
+                                }
+                              })()
                             }}
                           >
                             Delete
                           </Button>
                         </>
                       )}
-                    </div>
+                    </ActionsMenu>
                   </Cell>
                 </Row>
               ))}
@@ -221,7 +251,13 @@ export function CredentialsPage() {
       </Card>
 
       <Modal
-        title={editing === 'new' ? 'New credential' : `Edit ${form.name}`}
+        title={
+          rotating
+            ? `Update secret — ${form.name}`
+            : editing === 'new'
+              ? 'New credential'
+              : `Edit ${form.name}`
+        }
         open={editing !== undefined}
         onClose={() => {
           setEditing(undefined)
@@ -234,123 +270,147 @@ export function CredentialsPage() {
             submit()
           }}
         >
-          <Field label="Name" htmlFor="cred-name" error={fieldErrors.name}>
-            <Input
-              id="cred-name"
-              required
-              value={form.name}
-              onChange={(e) => {
-                setForm({ ...form, name: e.target.value })
-              }}
-            />
-          </Field>
-
-          <Field
-            label="Tenant ID"
-            htmlFor="cred-tenant"
-            error={fieldErrors.tenantId}
-            hint="The directory (tenant) ID from the application's overview page."
-          >
-            <Input
-              id="cred-tenant"
-              required
-              value={form.tenantId}
-              onChange={(e) => {
-                setForm({ ...form, tenantId: e.target.value })
-              }}
-            />
-          </Field>
-
-          <Field
-            label="Client ID"
-            htmlFor="cred-client"
-            error={fieldErrors.clientId}
-            hint="The application (client) ID."
-          >
-            <Input
-              id="cred-client"
-              required
-              value={form.clientId}
-              onChange={(e) => {
-                setForm({ ...form, clientId: e.target.value })
-              }}
-            />
-          </Field>
-
-          <Field label="Authentication" htmlFor="cred-type" error={fieldErrors.authType}>
-            <Select
-              id="cred-type"
-              value={form.authType}
-              onChange={(e) => {
-                setForm({ ...form, authType: e.target.value as AuthType })
-              }}
-            >
-              <option value="secret">Client secret</option>
-              <option value="certificate">Certificate</option>
-            </Select>
-          </Field>
-
-          {form.authType === 'secret' ? (
-            <Field
-              label="Client secret"
-              htmlFor="cred-secret"
-              error={fieldErrors.clientSecret}
-              hint={
-                editing === 'new'
-                  ? 'The secret value, shown once by Entra when it is created.'
-                  : 'Leave empty to keep the stored secret; enter a value to rotate it.'
-              }
-            >
-              <Input
-                id="cred-secret"
-                type="password"
-                autoComplete="off"
-                required={editing === 'new'}
-                value={form.clientSecret}
-                onChange={(e) => {
-                  setForm({ ...form, clientSecret: e.target.value })
-                }}
-              />
-            </Field>
-          ) : (
+          {rotating && (
+            <section>
+              <h3>Affected mailboxes</h3>
+              <ErrorNotice error={mailboxes.error} />
+              {mailboxes.isLoading ? (
+                <Spinner />
+              ) : (
+                <ul>
+                  {mailboxes.data?.items
+                    .filter((m) => editing !== 'new' && m.oauthCredentialId === editing?.id)
+                    .map((m) => (
+                      <li key={m.id}>{m.address}</li>
+                    ))}
+                </ul>
+              )}
+              <p>Stored secrets are never displayed.</p>
+            </section>
+          )}
+          {!rotating && (
             <>
-              <Field
-                label="Certificate (PEM)"
-                htmlFor="cred-cert"
-                error={fieldErrors.certificatePem}
-              >
-                <textarea
-                  id="cred-cert"
-                  rows={4}
-                  required={editing === 'new'}
-                  className="rounded-md border border-border bg-surface px-3 py-1.5 font-mono text-xs"
-                  value={form.certificatePem}
+              <Field label="Name" htmlFor="cred-name" error={fieldErrors.name}>
+                <Input
+                  id="cred-name"
+                  required
+                  value={form.name}
                   onChange={(e) => {
-                    setForm({ ...form, certificatePem: e.target.value })
+                    setForm({ ...form, name: e.target.value })
                   }}
                 />
               </Field>
+
               <Field
-                label="Private key (PEM)"
-                htmlFor="cred-key"
-                error={fieldErrors.certificateKeyPem}
-                hint={editing !== 'new' ? 'Leave empty to keep the stored key.' : undefined}
+                label="Tenant ID"
+                htmlFor="cred-tenant"
+                error={fieldErrors.tenantId}
+                hint="The directory (tenant) ID from the application's overview page."
               >
-                <textarea
-                  id="cred-key"
-                  rows={4}
-                  required={editing === 'new'}
-                  className="rounded-md border border-border bg-surface px-3 py-1.5 font-mono text-xs"
-                  value={form.certificateKeyPem}
+                <Input
+                  id="cred-tenant"
+                  required
+                  value={form.tenantId}
                   onChange={(e) => {
-                    setForm({ ...form, certificateKeyPem: e.target.value })
+                    setForm({ ...form, tenantId: e.target.value })
+                  }}
+                />
+              </Field>
+
+              <Field
+                label="Client ID"
+                htmlFor="cred-client"
+                error={fieldErrors.clientId}
+                hint="The application (client) ID."
+              >
+                <Input
+                  id="cred-client"
+                  required
+                  value={form.clientId}
+                  onChange={(e) => {
+                    setForm({ ...form, clientId: e.target.value })
                   }}
                 />
               </Field>
             </>
           )}
+          {(rotating || editing === 'new') && (
+            <>
+              <Field label="Authentication" htmlFor="cred-type" error={fieldErrors.authType}>
+                <Select
+                  id="cred-type"
+                  value={form.authType}
+                  onChange={(e) => {
+                    setForm({ ...form, authType: e.target.value as AuthType })
+                  }}
+                >
+                  <option value="secret">Client secret</option>
+                  <option value="certificate">Certificate</option>
+                </Select>
+              </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+              {form.authType === 'secret' ? (
+                <Field
+                  label="Client secret"
+                  htmlFor="cred-secret"
+                  error={fieldErrors.clientSecret}
+                  hint={
+                    editing === 'new'
+                      ? 'The secret value, shown once by Entra when it is created.'
+                      : 'Leave empty to keep the stored secret; enter a value to rotate it.'
+                  }
+                >
+                  <Input
+                    id="cred-secret"
+                    type="password"
+                    autoComplete="off"
+                    required={editing === 'new' || rotating}
+                    value={form.clientSecret}
+                    onChange={(e) => {
+                      setForm({ ...form, clientSecret: e.target.value })
+                    }}
+                  />
+                </Field>
+              ) : (
+                <>
+                  <Field
+                    label="Certificate (PEM)"
+                    htmlFor="cred-cert"
+                    error={fieldErrors.certificatePem}
+                  >
+                    <Textarea
+                      id="cred-cert"
+                      rows={4}
+                      required={editing === 'new' || rotating}
+                      textarea={{ className: 'font-mono text-xs' }}
+                      value={form.certificatePem}
+                      onChange={(e) => {
+                        setForm({ ...form, certificatePem: e.target.value })
+                      }}
+                    />
+                  </Field>
+                  <Field
+                    label="Private key (PEM)"
+                    htmlFor="cred-key"
+                    error={fieldErrors.certificateKeyPem}
+                    hint={editing !== 'new' ? 'Leave empty to keep the stored key.' : undefined}
+                  >
+                    <Textarea
+                      id="cred-key"
+                      rows={4}
+                      required={editing === 'new' || rotating}
+                      textarea={{ className: 'font-mono text-xs' }}
+                      value={form.certificateKeyPem}
+                      onChange={(e) => {
+                        setForm({ ...form, certificateKeyPem: e.target.value })
+                      }}
+                    />
+                  </Field>
+                </>
+              )}
+            </>
+          )}
+          <div className="grid gap-4">
             <Field
               label="Expires"
               htmlFor="cred-expiry"
@@ -365,21 +425,28 @@ export function CredentialsPage() {
                 }}
               />
             </Field>
-            <Field
-              label="Authority host"
-              htmlFor="cred-authority"
-              error={fieldErrors.authorityHost}
-              hint="Only for sovereign clouds; empty uses the configured default."
-            >
-              <Input
-                id="cred-authority"
-                placeholder="https://login.microsoftonline.com"
-                value={form.authorityHost}
-                onChange={(e) => {
-                  setForm({ ...form, authorityHost: e.target.value })
-                }}
-              />
-            </Field>
+            {!rotating && (
+              <details className="rounded border border-border p-3">
+                <summary className="text-sm font-semibold">Advanced settings</summary>
+                <div className="mt-3">
+                  <Field
+                    label="Authority host"
+                    htmlFor="cred-authority"
+                    error={fieldErrors.authorityHost}
+                    hint="Only for sovereign clouds; empty uses the configured default."
+                  >
+                    <Input
+                      id="cred-authority"
+                      placeholder="https://login.microsoftonline.com"
+                      value={form.authorityHost}
+                      onChange={(e) => {
+                        setForm({ ...form, authorityHost: e.target.value })
+                      }}
+                    />
+                  </Field>
+                </div>
+              </details>
+            )}
           </div>
 
           <ErrorNotice error={save.error} />

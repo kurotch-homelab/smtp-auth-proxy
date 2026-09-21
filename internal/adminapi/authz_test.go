@@ -39,6 +39,7 @@ func authorizationMatrix() []endpoint {
 	return []endpoint{
 		// Unauthenticated: a probe has no credentials, and the sign-in page has
 		// to be reachable before there is a session.
+		{Method: "GET", Path: "/licenses", Anonymous: true},
 		{Method: "GET", Path: "/healthz", Anonymous: true},
 		{Method: "GET", Path: "/readyz", Anonymous: true},
 		{Method: "GET", Path: "/api/v1/auth/config", Anonymous: true},
@@ -74,7 +75,9 @@ func authorizationMatrix() []endpoint {
 		{Method: "POST", Path: "/api/v1/mailboxes", Allowed: []store.Role{admin}, Body: map[string]any{}},
 		{Method: "PATCH", Path: "/api/v1/mailboxes/{mailbox}", Allowed: []store.Role{admin}, Body: map[string]any{}},
 		{Method: "DELETE", Path: "/api/v1/mailboxes/{mailbox}", Allowed: []store.Role{admin}},
-		{Method: "POST", Path: "/api/v1/mailboxes/{mailbox}/test", Allowed: []store.Role{admin}},
+		{Method: "POST", Path: "/api/v1/mailboxes/{mailbox}/test", Allowed: []store.Role{admin, operator}},
+		{Method: "GET", Path: "/api/v1/mailboxes/{mailbox}/diagnostics", Allowed: []store.Role{admin, operator, viewer}},
+		{Method: "POST", Path: "/api/v1/mailboxes/{mailbox}/test-send", Allowed: []store.Role{admin, operator}},
 		{Method: "POST", Path: "/api/v1/accounts", Allowed: []store.Role{admin}, Body: map[string]any{}},
 		{Method: "PATCH", Path: "/api/v1/accounts/{account}", Allowed: []store.Role{admin}, Body: map[string]any{}},
 		{Method: "DELETE", Path: "/api/v1/accounts/{account}", Allowed: []store.Role{admin}},

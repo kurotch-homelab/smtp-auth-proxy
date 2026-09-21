@@ -76,6 +76,8 @@ func writeValidationError(w http.ResponseWriter, fields map[string]string) {
 // values, none of which belong in an API response.
 func (s *Server) writeStoreError(w http.ResponseWriter, r *http.Request, err error) {
 	switch {
+	case errors.Is(err, store.ErrStateConflict):
+		writeError(w, http.StatusConflict, CodeConflict, "operation conflicts with current state; refresh and try again")
 	case errors.Is(err, store.ErrNotFound):
 		writeError(w, http.StatusNotFound, CodeNotFound, "not found")
 	case errors.Is(err, store.ErrConflict):

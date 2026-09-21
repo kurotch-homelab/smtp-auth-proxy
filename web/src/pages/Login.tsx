@@ -1,3 +1,4 @@
+import { LicenseFooter } from '@/components/LicenseFooter'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -112,6 +113,7 @@ export function LoginPage() {
           </a>
         </>
       )}
+      <LicenseFooter />
     </div>
   )
 }

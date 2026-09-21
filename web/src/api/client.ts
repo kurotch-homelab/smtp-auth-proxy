@@ -8,6 +8,7 @@ import type {
   CredentialSetup,
   ListResponse,
   Mailbox,
+  MailboxDiagnostics,
   Message,
   Session,
   Status,
@@ -172,6 +173,9 @@ export const api = {
     create: (body: unknown) => post<Mailbox>('/api/v1/mailboxes', body),
     update: (id: string, body: unknown) => patch<Mailbox>(`/api/v1/mailboxes/${id}`, body),
     remove: (id: string) => del<void>(`/api/v1/mailboxes/${id}`),
+    diagnostics: (id: string) => get<MailboxDiagnostics>(`/api/v1/mailboxes/${id}/diagnostics`),
+    sendTest: (id: string, body: { requestId: string; recipient: string }) =>
+      post<{ messageId: string; created: boolean }>(`/api/v1/mailboxes/${id}/test-send`, body),
     test: (id: string) => post<ConnectionTest>(`/api/v1/mailboxes/${id}/test`),
   },
 
@@ -196,6 +200,7 @@ export const api = {
   },
 
   users: {
+    get: (id: string) => get<User>(`/api/v1/users/${id}`),
     list: () => get<ListResponse<User>>('/api/v1/users'),
     create: (body: unknown) => post<User>('/api/v1/users', body),
     update: (id: string, body: unknown) => patch<User>(`/api/v1/users/${id}`, body),

@@ -1,0 +1,22 @@
+{
+  "@fluentui/react-icons@2.0.341": {
+    "file": "overrides/fluent-icons.txt",
+    "source": "https://raw.githubusercontent.com/microsoft/fluentui-system-icons/2e4da95009de778ae0f41ec6c17bc67c97f4dc56/LICENSE",
+    "sha256": "69bc45dc42b9acb96a69823adbc6ae538374e3c0bde169b855b32c48eaaef52f"
+  },
+  "embla-carousel@8.6.0": {
+    "file": "overrides/embla.txt",
+    "source": "https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE",
+    "sha256": "992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093"
+  },
+  "embla-carousel-autoplay@8.6.0": {
+    "file": "overrides/embla.txt",
+    "source": "https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE",
+    "sha256": "992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093"
+  },
+  "embla-carousel-fade@8.6.0": {
+    "file": "overrides/embla.txt",
+    "source": "https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE",
+    "sha256": "992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093"
+  }
+}

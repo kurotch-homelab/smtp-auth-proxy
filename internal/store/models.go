@@ -202,6 +202,7 @@ type AllowedSender struct {
 
 // Message is one submission working its way to Microsoft 365.
 type Message struct {
+	Origin        string
 	ID            string
 	SMTPAccountID sql.NullString
 	MailboxID     sql.NullString
