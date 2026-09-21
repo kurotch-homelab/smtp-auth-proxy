@@ -55,15 +55,15 @@ function setup(url: string) {
 it('keeps the same dialog when a direct detail request finishes', async () => {
   vi.spyOn(api.messages, 'list').mockResolvedValue({ items: [], total: 0 })
   let resolve!: (value: Message) => void
-  vi.spyOn(api.messages, 'get').mockReturnValue(
-    new Promise<Message>((done) => {
-      resolve = done
-    }),
-  )
+  const pending = new Promise<Message>((done) => {
+    resolve = done
+  })
+  vi.spyOn(api.messages, 'get').mockReturnValue(pending)
   setup('/messages?message=message-1')
   const loadingDialog = await screen.findByRole('dialog')
-  await act(() => {
+  await act(async () => {
     resolve(message)
+    await pending
   })
   await screen.findByRole('button', { name: 'Send now' })
   expect(screen.getByRole('dialog')).toBe(loadingDialog)
