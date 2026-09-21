@@ -10,7 +10,7 @@ COPY web/ ./
 RUN npm run build
 
 # ---- Stage 2: build the Go binary ------------------------------------------
-FROM golang:1.27-alpine AS build
+FROM golang:1.27.0-alpine AS build
 WORKDIR /src
 
 # Module downloads are cached separately from the source so that editing code
@@ -43,6 +43,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM gcr.io/distroless/static-debian12:nonroot AS runtime
 
 COPY --from=build /out/smtp-auth-proxy /usr/local/bin/smtp-auth-proxy
+
+COPY --from=build /src/internal/legal/THIRD_PARTY_NOTICES.txt /usr/share/licenses/smtp-auth-proxy/THIRD_PARTY_NOTICES.txt
+COPY --from=build /src/LICENSE /src/NOTICE /usr/share/licenses/smtp-auth-proxy/
 
 # /var/lib/smtp-auth-proxy holds the SQLite database and, when configured, the
 # on-disk spool. Mount a volume here in Compose or a PVC in Kubernetes.

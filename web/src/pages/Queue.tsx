@@ -1,8 +1,9 @@
+import { useConfirm } from '@/components/Confirm'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { api } from '@/api/client'
+import { DetailDrawer } from '@/components/DetailDrawer'
 import {
   Badge,
   Button,
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui'
 import { formatBytes, formatDateTime, formatRelative } from '@/lib/format'
 import { useSession } from '@/lib/useSession'
-import type { Message, MessageStatus } from '@/api/types'
+import type { MessageStatus } from '@/api/types'
 
 const statuses: MessageStatus[] = ['queued', 'sending', 'deferred', 'failed', 'held', 'sent']
 
@@ -35,20 +36,54 @@ const pageSize = 50
 
 export function QueuePage() {
   const { can } = useSession()
+  const confirm = useConfirm()
   const queryClient = useQueryClient()
   const [params, setParams] = useSearchParams()
 
   const status = params.get('status') ?? ''
   const search = params.get('search') ?? ''
-  const [searchDraft, setSearchDraft] = useState(search)
-  const [page, setPage] = useState(0)
-  const [selected, setSelected] = useState<Message | undefined>()
+  const page = Math.max(0, Number(params.get('page')) || 0)
+  function change(key: string, value: string) {
+    setParams((current) => {
+      const next = new URLSearchParams(current)
+      if (value) next.set(key, value)
+      else next.delete(key)
+      if (key !== 'page' && key !== 'message') next.delete('page')
+      return next
+    })
+  }
+  const setPage = (value: number) => {
+    change('page', String(value))
+  }
+  const selectedId = params.get('message') ?? ''
+  const detail = useQuery({
+    queryKey: ['message', selectedId],
+    queryFn: () => api.messages.get(selectedId),
+    enabled: !!selectedId,
+    refetchInterval: 10_000,
+  })
+  const selected = detail.error ? undefined : detail.data
+  const mailboxes = useQuery({ queryKey: ['mailboxes'], queryFn: api.mailboxes.list })
+  const accounts = useQuery({ queryKey: ['accounts'], queryFn: api.accounts.list })
 
   const query = useQuery({
-    queryKey: ['messages', status, search, page],
+    queryKey: [
+      'messages',
+      params.getAll('status').join(','),
+      search,
+      page,
+      params.get('mailboxId'),
+      params.get('accountId'),
+      params.get('since'),
+      params.get('until'),
+    ],
     queryFn: () =>
       api.messages.list({
-        status: status || undefined,
+        status: params.getAll('status').length ? params.getAll('status') : undefined,
+        mailboxId: params.get('mailboxId') || undefined,
+        accountId: params.get('accountId') || undefined,
+        since: params.get('since') || undefined,
+        until: params.get('until') || undefined,
         search: search || undefined,
         limit: pageSize,
         offset: page * pageSize,
@@ -64,7 +99,7 @@ export function QueuePage() {
       return api.messages.remove(id)
     },
     onSuccess: async () => {
-      setSelected(undefined)
+      change('message', '')
       await queryClient.invalidateQueries({ queryKey: ['messages'] })
       await queryClient.invalidateQueries({ queryKey: ['status'] })
     },
@@ -75,16 +110,102 @@ export function QueuePage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {query.isPaused && (
+        <ErrorNotice
+          error={new Error('Live updates are paused. Reconnect to refresh message status.')}
+        />
+      )}
+      {query.dataUpdatedAt > 0 && (
+        <p className="text-xs text-ink-muted">
+          Last updated {formatDateTime(new Date(query.dataUpdatedAt).toISOString())}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2" aria-label="Message views">
+        {[
+          ['Needs attention', 'failed,deferred'],
+          ['Processing', 'queued,sending'],
+          ['Held', 'held'],
+          ['Sent', 'sent'],
+          ['All', ''],
+        ].map(([label, values]) => (
+          <Button
+            key={label}
+            variant={params.getAll('status').join(',') === values ? 'primary' : 'secondary'}
+            aria-pressed={params.getAll('status').join(',') === values}
+            onClick={() => {
+              setParams((current) => {
+                const next = new URLSearchParams(current)
+                next.delete('status')
+                next.delete('page')
+                ;(values ?? '')
+                  .split(',')
+                  .filter(Boolean)
+                  .forEach((v) => {
+                    next.append('status', v)
+                  })
+                return next
+              })
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Select
+          aria-label="Mailbox"
+          value={params.get('mailboxId') ?? ''}
+          onChange={(e) => {
+            change('mailboxId', e.target.value)
+          }}
+        >
+          <option value="">All mailboxes</option>
+          {mailboxes.data?.items.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.address}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label="SMTP account"
+          value={params.get('accountId') ?? ''}
+          onChange={(e) => {
+            change('accountId', e.target.value)
+          }}
+        >
+          <option value="">All SMTP accounts</option>
+          {accounts.data?.items.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.username}
+            </option>
+          ))}
+        </Select>
+        {(['since', 'until'] as const).map((key) => (
+          <label key={key}>
+            {key === 'since' ? 'From (UTC)' : 'Until (UTC)'}
+            <Input
+              type="datetime-local"
+              value={(params.get(key) ?? '').slice(0, 16)}
+              onChange={(e) => {
+                change(key, e.target.value ? e.target.value + ':00Z' : '')
+              }}
+            />
+          </label>
+        ))}
+      </div>
+      <ErrorNotice error={mailboxes.error ?? accounts.error} />
       <Card
-        title="Queue"
+        title="Messages"
         actions={
           <form
             className="flex flex-wrap items-center gap-2"
             onSubmit={(event) => {
               event.preventDefault()
-              setPage(0)
+              const input = new FormData(event.currentTarget).get('search')
+              const searchDraft = typeof input === 'string' ? input : ''
               setParams((current) => {
                 const next = new URLSearchParams(current)
+                next.delete('page')
                 if (searchDraft) next.set('search', searchDraft)
                 else next.delete('search')
                 return next
@@ -93,11 +214,13 @@ export function QueuePage() {
           >
             <Select
               aria-label="Filter by status"
-              value={status}
+              value={
+                params.getAll('status').length > 1 || status.includes(',') ? 'grouped' : status
+              }
               onChange={(e) => {
-                setPage(0)
                 setParams((current) => {
                   const next = new URLSearchParams(current)
+                  next.delete('page')
                   if (e.target.value) next.set('status', e.target.value)
                   else next.delete('status')
                   return next
@@ -105,6 +228,9 @@ export function QueuePage() {
               }}
             >
               <option value="">All statuses</option>
+              <option value="grouped" disabled>
+                Selected view
+              </option>
               {statuses.map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -115,10 +241,9 @@ export function QueuePage() {
             <Input
               aria-label="Search by sender or recipient"
               placeholder="Sender or recipient"
-              value={searchDraft}
-              onChange={(e) => {
-                setSearchDraft(e.target.value)
-              }}
+              key={search}
+              defaultValue={search}
+              name="search"
             />
             <Button type="submit">Search</Button>
           </form>
@@ -157,7 +282,7 @@ export function QueuePage() {
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        setSelected(m)
+                        change('message', m.id)
                       }}
                     >
                       Details
@@ -176,7 +301,7 @@ export function QueuePage() {
                   <Button
                     disabled={page === 0}
                     onClick={() => {
-                      setPage((p) => p - 1)
+                      setPage(page - 1)
                     }}
                   >
                     Previous
@@ -187,7 +312,7 @@ export function QueuePage() {
                   <Button
                     disabled={page + 1 >= pages}
                     onClick={() => {
-                      setPage((p) => p + 1)
+                      setPage(page + 1)
                     }}
                   >
                     Next
@@ -199,92 +324,136 @@ export function QueuePage() {
         )}
       </Card>
 
-      {selected && (
-        <Card
-          title={`Message ${selected.id}`}
+      {selectedId && (
+        <DetailDrawer
+          title={selected ? `Message ${selected.id}` : 'Message details'}
+          onClose={() => {
+            change('message', '')
+          }}
           actions={
-            <div className="flex flex-wrap gap-2">
-              {can('queue.manage') && (
-                <>
-                  <Button
-                    busy={act.isPending}
-                    onClick={() => {
-                      act.mutate({ id: selected.id, action: 'retry' })
-                    }}
-                  >
-                    Send now
-                  </Button>
-                  <Button
-                    busy={act.isPending}
-                    onClick={() => {
-                      act.mutate({ id: selected.id, action: 'hold' })
-                    }}
-                  >
-                    Hold
-                  </Button>
-                  <Button
-                    variant="danger"
-                    busy={act.isPending}
-                    onClick={() => {
-                      if (confirm('Discard this message? It cannot be recovered.')) {
-                        act.mutate({ id: selected.id, action: 'delete' })
-                      }
-                    }}
-                  >
-                    Discard
-                  </Button>
-                </>
-              )}
-              {/* Downloading the message means reading somebody's mail, so only
+            selected && (
+              <div className="flex flex-wrap gap-2">
+                {can('queue.manage') && (
+                  <>
+                    <Button
+                      disabled={!['failed', 'deferred', 'held'].includes(selected.status)}
+                      busy={act.isPending}
+                      onClick={() => {
+                        act.mutate({ id: selected.id, action: 'retry' })
+                      }}
+                    >
+                      Send now
+                    </Button>
+                    <Button
+                      disabled={!['queued', 'deferred', 'failed'].includes(selected.status)}
+                      busy={act.isPending}
+                      onClick={() => {
+                        act.mutate({ id: selected.id, action: 'hold' })
+                      }}
+                    >
+                      Hold
+                    </Button>
+                    <Button
+                      variant="danger"
+                      disabled={selected.status === 'sending'}
+                      busy={act.isPending}
+                      onClick={() => {
+                        void (async () => {
+                          if (
+                            await confirm(
+                              selected.status === 'sent'
+                                ? 'Delete history and body? This cannot be undone.'
+                                : 'Discard this message? It cannot be recovered.',
+                            )
+                          ) {
+                            act.mutate({ id: selected.id, action: 'delete' })
+                          }
+                        })()
+                      }}
+                    >
+                      {selected.status === 'sent' ? 'Delete history and body' : 'Discard'}
+                    </Button>
+                  </>
+                )}
+                {/* Downloading the message means reading somebody's mail, so only
                   an administrator is offered it. */}
-              {can('queue.read_body') && (
-                <a
-                  href={api.messages.bodyUrl(selected.id)}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-border/40"
+                {can('queue.read_body') && (
+                  <a
+                    href={api.messages.bodyUrl(selected.id)}
+                    className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-border/40"
+                  >
+                    Download
+                  </a>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    change('message', '')
+                  }}
                 >
-                  Download
-                </a>
-              )}
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setSelected(undefined)
-                }}
-              >
-                Close
-              </Button>
-            </div>
+                  Close
+                </Button>
+              </div>
+            )
           }
         >
-          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-            <Detail label="Status" value={selected.status} />
-            <Detail label="Submitted by" value={selected.accountUsername ?? '—'} />
-            <Detail label="Sent as" value={selected.mailboxAddress ?? '—'} />
-            <Detail label="Envelope sender" value={selected.envelopeFrom} />
-            <Detail label="From header" value={selected.headerFrom ?? '—'} />
-            <Detail label="Recipients" value={selected.recipients.join(', ')} />
-            <Detail label="Size" value={formatBytes(selected.sizeBytes)} />
-            <Detail label="Client address" value={selected.clientIp ?? '—'} />
-            <Detail label="Received" value={formatDateTime(selected.receivedAt)} />
-            <Detail label="Attempts" value={String(selected.attempts)} />
-            {selected.nextAttemptAt && (
-              <Detail label="Next attempt" value={formatRelative(selected.nextAttemptAt)} />
-            )}
-            {selected.sentAt && (
-              <Detail label="Delivered" value={formatDateTime(selected.sentAt)} />
-            )}
-          </dl>
+          {!selected ? (
+            detail.error ? (
+              <ErrorNotice error={detail.error} />
+            ) : (
+              <Spinner />
+            )
+          ) : (
+            <>
+              <ErrorNotice error={act.error} />
+              <div className="mb-4 flex flex-wrap gap-3">
+                {selected.mailboxId && (
+                  <Link to={`/mailboxes?id=${selected.mailboxId}`}>Mailbox details</Link>
+                )}
+                {selected.smtpAccountId && (
+                  <Link to={`/accounts?id=${selected.smtpAccountId}`}>SMTP account details</Link>
+                )}
+              </div>
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                <Detail
+                  label="Submission"
+                  value={selected.origin === 'diagnostic' ? 'Diagnostic test' : 'SMTP submission'}
+                />
+                <Detail label="Status" value={selected.status} />
+                <Detail label="Submitted by" value={selected.accountUsername ?? '—'} />
+                <Detail label="Sent as" value={selected.mailboxAddress ?? '—'} />
+                <Detail label="Envelope sender" value={selected.envelopeFrom} />
+                <Detail label="From header" value={selected.headerFrom ?? '—'} />
+                <Detail label="Recipients" value={selected.recipients.join(', ')} />
+                <Detail label="Size" value={formatBytes(selected.sizeBytes)} />
+                <Detail label="Client address" value={selected.clientIp ?? '—'} />
+                <Detail label="Received" value={formatDateTime(selected.receivedAt)} />
+                <Detail label="Attempts" value={String(selected.attempts)} />
+                {selected.nextAttemptAt && (
+                  <Detail label="Next attempt" value={formatRelative(selected.nextAttemptAt)} />
+                )}
+                {selected.sentAt && (
+                  <Detail
+                    label="Accepted by Microsoft 365"
+                    value={formatDateTime(selected.sentAt)}
+                  />
+                )}
+              </dl>
 
-          {selected.lastError && (
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wide text-ink-muted">Last error</p>
-              <p className="mt-1 text-sm">
-                {selected.lastErrorCode && <code className="mr-2">{selected.lastErrorCode}</code>}
-                {selected.lastError}
-              </p>
-            </div>
+              {selected.lastError && (
+                <div className="mt-4">
+                  <p className="text-xs uppercase tracking-wide text-ink-muted">Last error</p>
+                  <p className="mt-1 text-sm">
+                    {selected.lastErrorCode && (
+                      <code className="mr-2">{selected.lastErrorCode}</code>
+                    )}
+                    {selected.lastError}
+                  </p>
+                </div>
+              )}
+            </>
           )}
-        </Card>
+        </DetailDrawer>
       )}
     </div>
   )

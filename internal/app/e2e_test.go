@@ -10,6 +10,7 @@ package app_test
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -21,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -55,7 +57,7 @@ type environment struct {
 
 // setup builds the whole stack: a fake Entra, a fake Exchange, a seeded
 // database and a running proxy.
-func setup(t *testing.T) *environment {
+func setup(t *testing.T, graphHandlers ...http.Handler) *environment {
 	t.Helper()
 
 	cert := selfSigned(t)
@@ -81,6 +83,13 @@ func setup(t *testing.T) *environment {
 	cfg.Upstream.SMTP.Port = exchange.Port()
 	cfg.Upstream.OAuth.Authority = entra.URL
 	cfg.Upstream.TLS.CAFile = caPath
+	if len(graphHandlers) > 0 {
+		graphServer := httptest.NewUnstartedServer(graphHandlers[0])
+		graphServer.TLS = &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		graphServer.StartTLS()
+		t.Cleanup(graphServer.Close)
+		cfg.Upstream.Graph.Endpoint = graphServer.URL
+	}
 	cfg.Admin.Address = "127.0.0.1:0"
 	cfg.Queue.PollInterval = config.Duration(20 * time.Millisecond)
 	// Delivery is paced to Exchange's real budget; the test sends one message.
@@ -421,4 +430,93 @@ func generateKey(t *testing.T) string {
 		t.Fatalf("GenerateKey: %v", err)
 	}
 	return spec
+}
+
+func TestDiagnosticReachesFakeExchangeWithoutSMTPAccount(t *testing.T) {
+	env := setup(t)
+	mailboxes, err := env.db.Mailboxes().List(t.Context())
+	if err != nil || len(mailboxes) != 1 {
+		t.Fatalf("mailboxes: %v", err)
+	}
+	mb := mailboxes[0]
+	m := &store.Message{MailboxAddress: mb.Address, EnvelopeFrom: mb.Address, Recipients: []string{"ops@example.net"}}
+	body := []byte("From: " + mb.Address + "\r\nTo: ops@example.net\r\nSubject: Diagnostic\r\n\r\nTest delivery.\r\n")
+	id, _, err := env.db.Messages().EnqueueDiagnostic(t.Context(), "operator", store.NewID(), mb.ID, "ops@example.net", m, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "diagnostic to reach fake Exchange", func() bool { return len(env.exchange.Deliveries()) == 1 })
+	waitFor(t, "Microsoft acceptance to be recorded", func() bool {
+		got, err := env.db.Messages().Get(t.Context(), id)
+		return err == nil && got.Status == store.StatusSent
+	})
+	got, err := env.db.Messages().Get(t.Context(), id)
+	if err != nil || got.SMTPAccountID.Valid || got.Origin != "diagnostic" {
+		t.Fatalf("diagnostic identity: %+v %v", got, err)
+	}
+}
+
+func TestDiagnosticThroughFakeGraph(t *testing.T) {
+	for _, scenario := range []string{"accepted", "retry", "permanent"} {
+		t.Run(scenario, func(t *testing.T) {
+			var attempts atomic.Int32
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				attempt := attempts.Add(1)
+				if r.Header.Get("Authorization") != "Bearer "+testAccessTok || r.URL.Path != "/v1.0/users/"+mailbox+"/sendMail" {
+					t.Error("unexpected Graph authentication or mailbox")
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				encoded, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Error(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				raw, err := base64.StdEncoding.DecodeString(string(encoded))
+				if err != nil || !strings.Contains(string(raw), "Diagnostic Graph body") {
+					t.Error("diagnostic MIME did not reach Graph")
+				}
+				if scenario == "permanent" {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				if scenario == "retry" && attempt == 1 {
+					w.WriteHeader(http.StatusServiceUnavailable)
+					return
+				}
+				w.WriteHeader(http.StatusAccepted)
+			})
+			env := setup(t, handler)
+			mailboxes, err := env.db.Mailboxes().List(t.Context())
+			if err != nil || len(mailboxes) != 1 {
+				t.Fatalf("mailboxes: %v", err)
+			}
+			mb := mailboxes[0]
+			mb.Transport = store.TransportGraph
+			if err := env.db.Mailboxes().Update(t.Context(), mb); err != nil {
+				t.Fatal(err)
+			}
+			m := &store.Message{MailboxAddress: mb.Address, EnvelopeFrom: mb.Address, Recipients: []string{"ops@example.net"}}
+			id, _, err := env.db.Messages().EnqueueDiagnostic(t.Context(), "operator", store.NewID(), mb.ID, "ops@example.net", m, []byte("From: "+mb.Address+"\r\nTo: ops@example.net\r\n\r\nDiagnostic Graph body\r\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			expected := store.StatusSent
+			if scenario == "permanent" {
+				expected = store.StatusFailed
+			}
+			waitFor(t, "diagnostic Graph outcome", func() bool {
+				got, err := env.db.Messages().Get(t.Context(), id)
+				return err == nil && got.Status == expected
+			})
+			wantAttempts := int32(1)
+			if scenario == "retry" {
+				wantAttempts = 2
+			}
+			if attempts.Load() != wantAttempts {
+				t.Errorf("attempts=%d, want %d", attempts.Load(), wantAttempts)
+			}
+		})
+	}
 }

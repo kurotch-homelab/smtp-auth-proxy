@@ -1,0 +1,1782 @@
+[
+  {
+    "name": "@babel/runtime",
+    "version": "7.29.7",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@babel/runtime/v/7.29.7",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "8f08c824b2bb54eda2b6ee6053d2eeed46877b3b7b2ef3f60fc2b9fa580f54b2"
+      }
+    ]
+  },
+  {
+    "name": "@emotion/hash",
+    "version": "0.9.2",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@emotion/hash/v/0.9.2",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "719058ae8dbdba06fafd4b21795bf624026bd34f61baf2b122fb35630d990280"
+      }
+    ]
+  },
+  {
+    "name": "@floating-ui/core",
+    "version": "1.8.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@floating-ui/core/v/1.8.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6c1117dc530c1ffcffb309e6bd53f333c2620453285327bde5ce91516eee1011"
+      }
+    ]
+  },
+  {
+    "name": "@floating-ui/devtools",
+    "version": "0.2.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@floating-ui/devtools/v/0.2.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6c1117dc530c1ffcffb309e6bd53f333c2620453285327bde5ce91516eee1011"
+      }
+    ]
+  },
+  {
+    "name": "@floating-ui/dom",
+    "version": "1.8.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@floating-ui/dom/v/1.8.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6c1117dc530c1ffcffb309e6bd53f333c2620453285327bde5ce91516eee1011"
+      }
+    ]
+  },
+  {
+    "name": "@floating-ui/utils",
+    "version": "0.2.12",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@floating-ui/utils/v/0.2.12",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6c1117dc530c1ffcffb309e6bd53f333c2620453285327bde5ce91516eee1011"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/keyboard-keys",
+    "version": "9.0.9",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/keyboard-keys/v/9.0.9",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "42292ba5eef7258c2c69d3493f5a6fe3f004409e5c8e87368c5f9dc179f34994"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/priority-overflow",
+    "version": "9.4.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/priority-overflow/v/9.4.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "109837a5119d275fe613eb114dd0c9d4dd724ce65caf34023ffce4433370c138"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-accordion",
+    "version": "9.12.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-accordion/v/9.12.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "1d44155b929cf8c9ba790b573f6645d1584a17eb12bb047d02f101b7dc11d968"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-alert",
+    "version": "9.0.2-0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-alert/v/9.0.2-0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "264531f9ae6792db34714d8faf38b3913e6c02e282b654a85721ba4b456d9491"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-aria",
+    "version": "9.17.14",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-aria/v/9.17.14",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "779ddf20d251833ca99aa69aa50b0152545f5c9ac4f800ab7e26a7dcf4aff18c"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-avatar",
+    "version": "9.11.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-avatar/v/9.11.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "3b10e9262597151a18b9c5845e69b7a7177613a038a3a6c274e0444ed571ac70"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-badge",
+    "version": "9.5.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-badge/v/9.5.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6037c64db96d3fdda79505a725e4d35f3d6aec413bebe79cf28d1b17a2434abc"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-breadcrumb",
+    "version": "9.4.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-breadcrumb/v/9.4.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "eab6b28bb3ae2d1d94718e7603f14fb084537ebef443707210b1cc4f897a29f8"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-button",
+    "version": "9.11.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-button/v/9.11.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "b3de8d95f911d57f8f8c080c7c40879783e73b573ae00a3d085e1d33ebfc8770"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-card",
+    "version": "9.7.2",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-card/v/9.7.2",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "d16240cf8c460743492bb380173a7e04834045481be7d0919cd537f613f7aa7a"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-carousel",
+    "version": "9.9.12",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-carousel/v/9.9.12",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "babe1411650de07a5ae3701bd5f08b627739d38043cdf256b6a080fd817de0d4"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-checkbox",
+    "version": "9.6.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-checkbox/v/9.6.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "613b0877a80cec9aca0e530e915b62f338402f70eef7efbae7ee47b1949765cc"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-color-picker",
+    "version": "9.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-color-picker/v/9.3.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a3745aad79ee9594f12541d70e667cb2a9800a4dfd078a0a8d0363893e601e65"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-combobox",
+    "version": "9.17.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-combobox/v/9.17.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "c449792ebdf4fda7ceb5cd3e9e89451024544631e9d7b34bdbbe3ca200f9a0a7"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-components",
+    "version": "9.74.7",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-components/v/9.74.7",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "7fbfad6ac03e36edc771ee5f5878ecec9826c56a1c726f3bcb7709a81d95c657"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-context-selector",
+    "version": "9.2.19",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-context-selector/v/9.2.19",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5b9e1a78b67ef98a416cdbbcb3113d0c3c8ad5c1b3ba6b3e8454bf2cb7b125ed"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-dialog",
+    "version": "9.18.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-dialog/v/9.18.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "2b65ae1ad066e3260cf0b00a98eee861ed6306cb5e8f1820d77a3b2acd691469"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-divider",
+    "version": "9.7.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-divider/v/9.7.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "c34bd70fe61b09ba1e67a1de64b4aad15c1770df69d634a1a00ded755b522927"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-drawer",
+    "version": "9.13.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-drawer/v/9.13.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "c139583755b634da6dccbd2331ac33ed2a54318cd133e87e9a2488e87e80aa6b"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-field",
+    "version": "9.5.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-field/v/9.5.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ef52cead00ce03715740ee01c8ecd6e6c0395f81a92b0bbef94cfb836ffcbedc"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-icons",
+    "version": "2.0.341",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-icons/v/2.0.341\nLicense source: https://raw.githubusercontent.com/microsoft/fluentui-system-icons/2e4da95009de778ae0f41ec6c17bc67c97f4dc56/LICENSE\nSource SHA-256: 69bc45dc42b9acb96a69823adbc6ae538374e3c0bde169b855b32c48eaaef52f",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "d2773ab0b396d40041d76b289af3ed559487aa5c0d2395e553c1137f82f4886c"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-image",
+    "version": "9.4.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-image/v/9.4.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "68795babfe39f0fd7dcb15153088bda69f3cc8b87a7d53bd9d8e1c27c5814871"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-infobutton",
+    "version": "9.0.1-0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-infobutton/v/9.0.1-0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "371b8c8e7466c36fa40cd9228b64e358f7a3b7ca7bce1046a43e518dfbae7fa1"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-infolabel",
+    "version": "9.4.25",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-infolabel/v/9.4.25",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "14c1dfd3e61e199d04937a1f6ce2cef4bb52d74fec4d8574c4d5b908efc7a63d"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-input",
+    "version": "9.8.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-input/v/9.8.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "46e3b0c91b1c1206d0543499a186afe9479d0bbbfc2f57f034918759faf3e653"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-jsx-runtime",
+    "version": "9.4.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-jsx-runtime/v/9.4.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a42387a59b017fdeb22dc2a863ed78ff51d8dfa6ab7b54312fd69dad7987d622"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-label",
+    "version": "9.4.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-label/v/9.4.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "bc497ab6e87e5df1c141571cf800c487d940473ea594459574c2c1ea703839c0"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-link",
+    "version": "9.8.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-link/v/9.8.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "56faa81f1699143d849b349060454453bf694ba005559a0807df99d810d5d364"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-list",
+    "version": "9.6.18",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-list/v/9.6.18",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "26f756a5dd17a27e480a3cf2b17f7878bf051807fb1178e48cde0ce14c9bf89c"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-menu",
+    "version": "9.25.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-menu/v/9.25.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "fddfdc5638ff6b725c9778b831ef24c0f00d7654ba7f07549641d2b7daccd117"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-message-bar",
+    "version": "9.7.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-message-bar/v/9.7.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "c317fa9737b8fe099a380196c63cc2dae1de242554613be07816768e43936e6e"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-motion-components-preview",
+    "version": "0.15.8",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-motion-components-preview/v/0.15.8",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "9163ee4280e2ab0b32cb936ab1d631a2e1305e35eff6b9d13df47c91377831ea"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-motion",
+    "version": "9.16.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-motion/v/9.16.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "0268357fccf31f1f1b0a978207ca4d2a319c87def0dc40f6984af57ec5061085"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-nav",
+    "version": "9.4.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-nav/v/9.4.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6e999e5f3c814b02fb0a061c39f5cbc4df3cc27d2715c19e2b5ad81875586208"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-overflow",
+    "version": "9.9.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-overflow/v/9.9.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "4eaf14548e08d79c8f8dcac59b227a3a4a06149d622c6c679c93c1579b70b440"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-persona",
+    "version": "9.7.8",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-persona/v/9.7.8",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "2a0e67832be1e43221c30f2946df0d9b2e2d807a07d9e54d61aa1fd1121a0e01"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-popover",
+    "version": "9.14.7",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-popover/v/9.14.7",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a0223562f1095725bdf83ce129fc6152ed367e8014a5e2b29b3ff1e9ee9d2c31"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-portal",
+    "version": "9.8.15",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-portal/v/9.8.15",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "368376c0709e93162d282b9d8467a82e01be1bda977276348e2baca0518a7f53"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-positioning",
+    "version": "9.23.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-positioning/v/9.23.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "0c38a700b5631112a3b7e7d64d6d146bb33bb734af68ff2ff08f3eb21640e6d7"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-progress",
+    "version": "9.5.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-progress/v/9.5.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "3e02f2a6f79b3e7f1d75e863935af0f94369b99b4238984a4201319cf58f2996"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-provider",
+    "version": "9.22.20",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-provider/v/9.22.20",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "c3cd2984be7eae1679de097254e7c9ed2c20b6c3f9555030d84cc79387310f6a"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-radio",
+    "version": "9.6.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-radio/v/9.6.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "15033141d428a48488654c40b8e3927235fc3b39d2827e7e4a90acd77dd0da58"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-rating",
+    "version": "9.4.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-rating/v/9.4.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "81e957974823d94d687094303e4dcfd7c078474c71581b28b75fb99bf11fed34"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-search",
+    "version": "9.4.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-search/v/9.4.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5038daf65b90a78363eff365a62edd7a2367c41732616b9a023f5b26aa85e1ef"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-select",
+    "version": "9.5.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-select/v/9.5.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a9917c007412812f0a8a223d6442b8a397e435d91ba3feb5ddc88e03c70fba9e"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-shared-contexts",
+    "version": "9.26.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-shared-contexts/v/9.26.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5c3e729d7ae9daca2462b725f4394838f672643db338ede772736e1edc9f3560"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-skeleton",
+    "version": "9.7.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-skeleton/v/9.7.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "4b40f7f6da52f3bf935d23da08ecb02fa1d4db1f6b8e87d88ab7bf439450144f"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-slider",
+    "version": "9.6.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-slider/v/9.6.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "8b0a192e9c93671ee48351e900d68807bc9459d133022617ef36ca5f576e40fc"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-spinbutton",
+    "version": "9.6.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-spinbutton/v/9.6.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "9ae69cf142f3de2807c1c674b6cffb6d87aeb81017e89e173f0f5dc17472c87e"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-spinner",
+    "version": "9.8.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-spinner/v/9.8.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a20f02779a54ae30b5cf10f5591b1c50e235d5d4a9eaf5d7751a48f1535934e0"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-swatch-picker",
+    "version": "9.6.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-swatch-picker/v/9.6.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "30b940ca956f31c44447626182b12924b3567c98e8c2f0a0319b599ccd7320c5"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-switch",
+    "version": "9.7.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-switch/v/9.7.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "fde34da2bb2cd9388e4a01e36131c850ce91cf3174fae95c90aad185791b3eab"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-table",
+    "version": "9.19.20",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-table/v/9.19.20",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "7046047acd56b14dd8e54be5d5fc8b83619a2f81660785fedb591fccb033b3e7"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tabs",
+    "version": "9.12.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tabs/v/9.12.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6e7f201a996ab336bac3be8740bf76b9b9379facfa14c09ad331e155add21bd8"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tabster",
+    "version": "9.26.17",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tabster/v/9.26.17",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "de7a4bae7b5edc6a36710cf44922c7395b5d08872c2417955a9998187f11aac1"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tag-picker",
+    "version": "9.10.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tag-picker/v/9.10.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "25e8027a2773cc0c23284c4092f764f6a05ee4398253e45f0d81828bbbbe2bec"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tags",
+    "version": "9.9.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tags/v/9.9.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "e46783ed2858e29f1478e42dadf56d9e2497ceac3ab2a8f22e683a104dd30ff1"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-teaching-popover",
+    "version": "9.7.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-teaching-popover/v/9.7.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "83226cf815bb88efc982c1ba0474011e10c0ad561439c148bc00279212173ea9"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-text",
+    "version": "9.6.19",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-text/v/9.6.19",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "b46da13d11d07aa5f25cb4b14ca4d7d7c71daa5250b9f91c20b632453042b8c7"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-textarea",
+    "version": "9.7.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-textarea/v/9.7.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "7929f3a6ef39b98cbc82839d2f94f3ec578bcd7fbb011bb96897dce6b3626516"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-theme",
+    "version": "9.2.2",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-theme/v/9.2.2",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5798dce92bec0ea31376fffb54ae485256fbed7e8f0049f1f3aacf7cc770d6f0"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-toast",
+    "version": "9.8.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-toast/v/9.8.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "f9c9d3ff81c51e303c13682a613cb89d8cc777c4f428b4bbe011449e6f9239b2"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-toolbar",
+    "version": "9.8.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-toolbar/v/9.8.4",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "d4591f7dd9f0ab58f8bbaa4bf04d8cf421d986d31eb38c462b5eb1afffcbdffe"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tooltip",
+    "version": "9.10.5",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tooltip/v/9.10.5",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5e722623bf3890ac3bf4bbac8e03b5fa373cf7c4b0a5f9346a83aa59e7790659"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-tree",
+    "version": "9.16.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-tree/v/9.16.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "53653bd9b60287651f483d59a3d0e1e8e05b108a04475f4ede0bfb3bf54c3903"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-utilities",
+    "version": "9.26.6",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-utilities/v/9.26.6",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "5437073727194a01905facb22e5d8eb105554979fc56349825eda5021a1ddbd0"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/react-virtualizer",
+    "version": "9.0.0-alpha.115",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/react-virtualizer/v/9.0.0-alpha.115",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "d000d06476c84571072f22a4dd13ba5d1e4ff1e92672d848b08ad6d82b1453a2"
+      }
+    ]
+  },
+  {
+    "name": "@fluentui/tokens",
+    "version": "1.0.0-alpha.24",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@fluentui/tokens/v/1.0.0-alpha.24",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "92fb8860fde2ac380f8612ccaef67fe8d7127718a313341098348f066f1f71fe"
+      }
+    ]
+  },
+  {
+    "name": "@griffel/core",
+    "version": "1.21.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@griffel/core/v/1.21.3",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "@griffel/react",
+    "version": "1.7.7",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@griffel/react/v/1.7.7",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "@griffel/style-types",
+    "version": "1.4.2",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@griffel/style-types/v/1.4.2",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "@swc/helpers",
+    "version": "0.5.23",
+    "license": "Apache-2.0",
+    "source": "https://www.npmjs.com/package/@swc/helpers/v/0.5.23",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "565427e6ed70fd16ebfe8c3a99d64cc00242c3af2b2dbf5883ee9e245557268c"
+      }
+    ]
+  },
+  {
+    "name": "@tanstack/query-core",
+    "version": "5.103.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@tanstack/query-core/v/5.103.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "277d2a8e459713d6c596bab89ef857cb8b2433223fa9edb49ccc403a6ceb08ee"
+      }
+    ]
+  },
+  {
+    "name": "@tanstack/react-query",
+    "version": "5.103.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@tanstack/react-query/v/5.103.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "277d2a8e459713d6c596bab89ef857cb8b2433223fa9edb49ccc403a6ceb08ee"
+      }
+    ]
+  },
+  {
+    "name": "@types/react-dom",
+    "version": "19.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "@types/react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/@types/react/v/19.3.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "cookie",
+    "version": "1.1.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/cookie/v/1.1.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "b970cfe4a7f34ca7455ca2dd6cc4fa3a229c34c67eb62e0e5f746131bead1e70"
+      }
+    ]
+  },
+  {
+    "name": "csstype",
+    "version": "3.2.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/csstype/v/3.2.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6a972b33787e14304b4cfca68387f8644d11788a5d551731196b8e64dd9f0431"
+      }
+    ]
+  },
+  {
+    "name": "embla-carousel-autoplay",
+    "version": "8.6.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/embla-carousel-autoplay/v/8.6.0\nLicense source: https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE\nSource SHA-256: 992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "771ca29c102d605a78be65c77313e56c2da9063d6e617e93cb9cf638429a184d"
+      }
+    ]
+  },
+  {
+    "name": "embla-carousel-fade",
+    "version": "8.6.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/embla-carousel-fade/v/8.6.0\nLicense source: https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE\nSource SHA-256: 992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "771ca29c102d605a78be65c77313e56c2da9063d6e617e93cb9cf638429a184d"
+      }
+    ]
+  },
+  {
+    "name": "embla-carousel",
+    "version": "8.6.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/embla-carousel/v/8.6.0\nLicense source: https://raw.githubusercontent.com/davidjerleke/embla-carousel/0fe65834136f1aa35e4c1a4a477e5ccb4bb5ee54/LICENSE\nSource SHA-256: 992490064b90ec94c302fe5f29dcc14cb44145857064e46f9ffe6c8f511c1093",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "771ca29c102d605a78be65c77313e56c2da9063d6e617e93cb9cf638429a184d"
+      }
+    ]
+  },
+  {
+    "name": "github.com/AzureAD/microsoft-authentication-library-for-go/apps",
+    "version": "v1.9.0",
+    "license": "MIT",
+    "source": "https://github.com/AzureAD/microsoft-authentication-library-for-go/blob/v1.9.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "github.com/beorn7/perks/quantile",
+    "version": "v1.0.1",
+    "license": "MIT",
+    "source": "https://github.com/beorn7/perks/blob/v1.0.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "7fd1ff533ed2838eb9b85bbf4cb65c67e1a57f2cf566659bc933af5048e62c4b"
+      }
+    ]
+  },
+  {
+    "name": "github.com/cespare/xxhash/v2",
+    "version": "v2.3.0",
+    "license": "MIT",
+    "source": "https://github.com/cespare/xxhash/blob/v2.3.0/LICENSE.txt",
+    "files": [
+      {
+        "name": "LICENSE.txt",
+        "sha256": "2ee65d7fcc476a1f2d038e004a2ce48b0f9e4c94d05bf5edc959ce1be984347f"
+      }
+    ]
+  },
+  {
+    "name": "github.com/coreos/go-oidc/v3/oidc",
+    "version": "v3.21.0",
+    "license": "Apache-2.0",
+    "source": "https://github.com/coreos/go-oidc/blob/v3.21.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "fff231f3c4c9426a0a2b6912892808d67ebd7a739b1b1333e4f65c2890f1b944"
+      }
+    ]
+  },
+  {
+    "name": "github.com/dustin/go-humanize",
+    "version": "v1.0.1",
+    "license": "MIT",
+    "source": "https://github.com/dustin/go-humanize/blob/v1.0.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "a387ca71c7aabd58fc62bd0cf0ba19e33bc0577fa4b19eae8bfa77d960167c90"
+      }
+    ]
+  },
+  {
+    "name": "github.com/emersion/go-sasl",
+    "version": "v0.0.0-20241020182733-b788ff22d5a6",
+    "license": "MIT",
+    "source": "https://github.com/emersion/go-sasl/blob/b788ff22d5a6/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "24af3279be8b0373850aff8cdf6bb6e024d45abd6db044f66528e430f58f51b2"
+      }
+    ]
+  },
+  {
+    "name": "github.com/emersion/go-smtp",
+    "version": "v0.25.0",
+    "license": "MIT",
+    "source": "https://github.com/emersion/go-smtp/blob/v0.25.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "8faf85ccf12e966941be1faabad5c6b1889a21f538f8eb077a2af49bb5db1b0b"
+      }
+    ]
+  },
+  {
+    "name": "github.com/go-chi/chi/v5",
+    "version": "v5.3.2",
+    "license": "MIT",
+    "source": "https://github.com/go-chi/chi/blob/v5.3.2/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "490d5ddb5377d984ea0d1dacb1312d61a1d71d340be7855c63a52e0fd5b88519"
+      }
+    ]
+  },
+  {
+    "name": "github.com/go-jose/go-jose/v4",
+    "version": "v4.1.5",
+    "license": "Apache-2.0",
+    "source": "https://github.com/go-jose/go-jose/blob/v4.1.5/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      }
+    ]
+  },
+  {
+    "name": "github.com/go-jose/go-jose/v4/json",
+    "version": "v4.1.5",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/go-jose/go-jose/blob/v4.1.5/json/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "fa5d72757c7d3472a835edbc1192f16e972bf8d1de261eaacc33f06ce47884b5"
+      }
+    ]
+  },
+  {
+    "name": "github.com/golang-jwt/jwt/v5",
+    "version": "v5.3.1",
+    "license": "MIT",
+    "source": "https://github.com/golang-jwt/jwt/blob/v5.3.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "165040bd15ac3ffe71641e93e026f3fc8e157ab3cbd88c4f731f9d495d246f7b"
+      }
+    ]
+  },
+  {
+    "name": "github.com/google/uuid",
+    "version": "v1.6.0",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/google/uuid/blob/v1.6.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "321fb0f91d22066280c16c283b4a52e20e0e356ebc78409b321aff26d7cd33d1"
+      }
+    ]
+  },
+  {
+    "name": "github.com/jackc/pgpassfile",
+    "version": "v1.0.0",
+    "license": "MIT",
+    "source": "https://github.com/jackc/pgpassfile/blob/v1.0.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "20f422ce77ff184db904befacb3a5c58de76814380a6fe9959cfd32831d3439f"
+      }
+    ]
+  },
+  {
+    "name": "github.com/jackc/pgservicefile",
+    "version": "v0.0.0-20240606120523-5a60cdf6a761",
+    "license": "MIT",
+    "source": "https://github.com/jackc/pgservicefile/blob/5a60cdf6a761/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "2b1fbe1e34ae377b881fa50934a20a9e485c8ce8443afbd3479f10ae7384b5fc"
+      }
+    ]
+  },
+  {
+    "name": "github.com/jackc/pgx/v5",
+    "version": "v5.11.0",
+    "license": "MIT",
+    "source": "https://github.com/jackc/pgx/blob/v5.11.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "8718271c6832350ff26791bd76408946b7e5b8db3c85f2c2e41a6864e55c23ca"
+      }
+    ]
+  },
+  {
+    "name": "github.com/jackc/puddle/v2",
+    "version": "v2.2.2",
+    "license": "MIT",
+    "source": "https://github.com/jackc/puddle/blob/v2.2.2/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "375fc8b34892eb3085d8fe4c260070b05b7b89964a36b2c0474590bcffdf8965"
+      }
+    ]
+  },
+  {
+    "name": "github.com/kylelemons/godebug",
+    "version": "v1.1.0",
+    "license": "Apache-2.0",
+    "source": "https://github.com/kylelemons/godebug/blob/v1.1.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      }
+    ]
+  },
+  {
+    "name": "github.com/mattn/go-isatty",
+    "version": "v0.0.24",
+    "license": "MIT",
+    "source": "https://github.com/mattn/go-isatty/blob/v0.0.24/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "d89fcc814b3a952be93ec81dfe931000d4a806daa4136156179786d07e7f318c"
+      }
+    ]
+  },
+  {
+    "name": "github.com/munnerz/goautoneg",
+    "version": "v0.0.0-20191010083416-a7dc8b61c822",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/munnerz/goautoneg/blob/a7dc8b61c822/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6851dce5d9f4a265e925abf99ecfa06111002c8a0f58ca6b24882ee2ca716d65"
+      }
+    ]
+  },
+  {
+    "name": "github.com/ncruces/go-strftime",
+    "version": "v1.0.0",
+    "license": "MIT",
+    "source": "https://github.com/ncruces/go-strftime/blob/v1.0.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "947965049514d1723ceec907355fb729c78fe231f1c0965b5eda7c1a88475cab"
+      }
+    ]
+  },
+  {
+    "name": "github.com/prometheus/client_golang/internal/github.com/golang/gddo/httputil",
+    "version": "v1.24.1",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/prometheus/client_golang/blob/v1.24.1/internal/github.com/golang/gddo/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "64906cc1030f14263451a1193d7d597771eab8710752a3238448ad4e0cbcfac4"
+      }
+    ]
+  },
+  {
+    "name": "github.com/prometheus/client_golang/prometheus",
+    "version": "v1.24.1",
+    "license": "Apache-2.0",
+    "source": "https://github.com/prometheus/client_golang/blob/v1.24.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "f6c7b09c73554da233e12f776eede9a9a3f1a0f7e00b19178e41473af53853b4"
+      }
+    ]
+  },
+  {
+    "name": "github.com/prometheus/client_model/go",
+    "version": "v0.6.2",
+    "license": "Apache-2.0",
+    "source": "https://github.com/prometheus/client_model/blob/v0.6.2/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "1c6ae0107fb9e87ce26f8098d5d173914331217f4d11d7ff3956d37ecb9c49a3"
+      }
+    ]
+  },
+  {
+    "name": "github.com/prometheus/common",
+    "version": "v0.70.1",
+    "license": "Apache-2.0",
+    "source": "https://github.com/prometheus/common/blob/v0.70.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "a964149ae204f5510720cb1e569beabf22458a8a571d9d4e9773bbe3f895d13e"
+      }
+    ]
+  },
+  {
+    "name": "github.com/prometheus/procfs",
+    "version": "v0.21.1",
+    "license": "Apache-2.0",
+    "source": "https://github.com/prometheus/procfs/blob/v0.21.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "283ea6cc2997a1a70da0049e09adf9317bb60ca1b51279b65196b83a69e1996b"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "322c24deae12157c69417716f0237cb08f4f99953d21be813067a62551227edc"
+      }
+    ]
+  },
+  {
+    "name": "github.com/remyoudompheng/bigfft",
+    "version": "v0.0.0-20230129092748-24d4a6f8daec",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/remyoudompheng/bigfft/blob/24d4a6f8daec/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "fa5d72757c7d3472a835edbc1192f16e972bf8d1de261eaacc33f06ce47884b5"
+      }
+    ]
+  },
+  {
+    "name": "Go runtime and standard library",
+    "version": "1.27.0",
+    "license": "BSD-3-Clause",
+    "source": "https://go.dev/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "Go standard library vendored golang.org/x/crypto",
+    "version": "1.27.0",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/golang/go/blob/go1.27.0/src/vendor/golang.org/x/crypto/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "Go standard library vendored golang.org/x/net",
+    "version": "1.27.0",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/golang/go/blob/go1.27.0/src/vendor/golang.org/x/net/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "Go standard library vendored golang.org/x/sys",
+    "version": "1.27.0",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/golang/go/blob/go1.27.0/src/vendor/golang.org/x/sys/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "Go standard library vendored golang.org/x/text",
+    "version": "1.27.0",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/golang/go/blob/go1.27.0/src/vendor/golang.org/x/text/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/crypto",
+    "version": "v0.57.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/crypto/+/v0.57.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/oauth2",
+    "version": "v0.37.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/oauth2/+/v0.37.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/sync",
+    "version": "v0.23.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/sync/+/v0.23.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/sys",
+    "version": "v0.48.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/sys/+/v0.48.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/sys/unix",
+    "version": "v0.48.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/sys/+/v0.48.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "golang.org/x/text",
+    "version": "v0.42.0",
+    "license": "BSD-3-Clause",
+    "source": "https://cs.opensource.google/go/x/text/+/v0.42.0:LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "22975ebe413674bc619428a26e53412013dccffa69e2f27100dbd8d946fde287"
+      }
+    ]
+  },
+  {
+    "name": "google.golang.org/protobuf",
+    "version": "v1.36.11",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/protocolbuffers/protobuf-go/blob/v1.36.11/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "9b76cfea8ae857021e62ffb05061a0293f387a8b0b18d95c9088423feae255a4"
+      }
+    ]
+  },
+  {
+    "name": "gopkg.in/yaml.v3",
+    "version": "v3.0.1",
+    "license": "MIT",
+    "source": "https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ad456c7bd0029fd09d22666d45c74136ae590c2ff88bb4fed8596eca838d8c81"
+      },
+      {
+        "name": "NOTICE",
+        "sha256": "2f98f631d8368007c773bd80bf13f9351669e90146d34a24609920052d2fed5f"
+      }
+    ]
+  },
+  {
+    "name": "keyborg",
+    "version": "2.14.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/keyborg/v/2.14.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "keyborg",
+    "version": "3.498.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/keyborg/v/3.498.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "modernc.org/libc",
+    "version": "v1.75.7",
+    "license": "BSD-3-Clause",
+    "source": "https://gitlab.com/cznic/libc/-/blob/v1.75.7/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "7d1d14fc62bf1284cfe79e73337e8906503e7cfd7589b27801f343dc3b68bd51"
+      }
+    ]
+  },
+  {
+    "name": "modernc.org/mathutil",
+    "version": "v1.7.1",
+    "license": "BSD-3-Clause",
+    "source": "https://gitlab.com/cznic/mathutil/-/blob/v1.7.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "cb501d1d52603ec4eca54379a73ffe097a3de1b8c2cfdef7bd5f0a90f143c8c8"
+      }
+    ]
+  },
+  {
+    "name": "modernc.org/memory",
+    "version": "v1.12.1",
+    "license": "BSD-3-Clause",
+    "source": "https://gitlab.com/cznic/memory/-/blob/v1.12.1/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "548392101458709aa48b0f2eec64c26110c55a4052c5137eb226ff8449f3eef4"
+      }
+    ]
+  },
+  {
+    "name": "modernc.org/sqlite",
+    "version": "v1.59.0",
+    "license": "BSD-3-Clause",
+    "source": "https://gitlab.com/cznic/sqlite/-/blob/v1.59.0/LICENSE",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ed5daf17385452dcc929b3c89bfedbb759c9daeeb7ad9c8ff394e2f1d7c67831"
+      }
+    ]
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/react-dom/v/19.3.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+      }
+    ]
+  },
+  {
+    "name": "react-router-dom",
+    "version": "7.18.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/react-router-dom/v/7.18.4",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "9bd42e9ab2f84a397e8efd7ba4feedd4956198c0ff6ea6f886fd47fcf8e53df2"
+      }
+    ]
+  },
+  {
+    "name": "react-router",
+    "version": "7.18.4",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/react-router/v/7.18.4",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "9bd42e9ab2f84a397e8efd7ba4feedd4956198c0ff6ea6f886fd47fcf8e53df2"
+      }
+    ]
+  },
+  {
+    "name": "react",
+    "version": "19.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/react/v/19.3.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+      }
+    ]
+  },
+  {
+    "name": "rolldown",
+    "version": "1.2.8",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/rolldown/v/1.2.8",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "93a675c915fd5846a0d9956bfc10cea9b2deeacf59074abf398f0fdcce10a19b"
+      },
+      {
+        "name": "THIRD-PARTY-LICENSE",
+        "sha256": "a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c"
+      }
+    ]
+  },
+  {
+    "name": "rtl-css-js",
+    "version": "1.16.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/rtl-css-js/v/1.16.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "745048d8eb46811dcbd42e83b7adea174b7f4e2ec6aa94452a3d5b56625598bd"
+      }
+    ]
+  },
+  {
+    "name": "scheduler",
+    "version": "0.28.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/scheduler/v/0.28.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+      }
+    ]
+  },
+  {
+    "name": "set-cookie-parser",
+    "version": "2.7.2",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/set-cookie-parser/v/2.7.2",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "1798ebfcb7e5db7076851eb61f3101d8117be2dc0408688bd90b842c4f16f3fb"
+      }
+    ]
+  },
+  {
+    "name": "stylis",
+    "version": "4.4.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/stylis/v/4.4.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "6821b85df4724cddb1de03c371af9a7cc055839d0331dcd7c2f1b1d025098c49"
+      }
+    ]
+  },
+  {
+    "name": "tabster",
+    "version": "8.8.1",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/tabster/v/8.8.1",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "ff82c90f84945c60601e96b43246009b9bc589f3ebe1cd8a0fd39a3520d8c310"
+      }
+    ]
+  },
+  {
+    "name": "tailwindcss",
+    "version": "4.3.3",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/tailwindcss/v/4.3.3",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "fdd854c84f367147ac4376837dee5002b0d2db39e8effed810ebc48f9bb70318"
+      }
+    ]
+  },
+  {
+    "name": "tslib",
+    "version": "2.8.1",
+    "license": "0BSD",
+    "source": "https://www.npmjs.com/package/tslib/v/2.8.1",
+    "files": [
+      {
+        "name": "LICENSE.txt",
+        "sha256": "0e8d2550baea17eb3072c4f919b36fbf9852bb49dba948549872e713863c0834"
+      }
+    ]
+  },
+  {
+    "name": "use-sync-external-store",
+    "version": "1.7.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/use-sync-external-store/v/1.7.0",
+    "files": [
+      {
+        "name": "LICENSE",
+        "sha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+      }
+    ]
+  },
+  {
+    "name": "vite",
+    "version": "8.3.0",
+    "license": "MIT",
+    "source": "https://www.npmjs.com/package/vite/v/8.3.0",
+    "files": [
+      {
+        "name": "LICENSE.md",
+        "sha256": "577db6f9bc08aff913034e8f1a13a4f4460d9afd77652293370ddfcb9bb6cbf6"
+      }
+    ]
+  }
+]

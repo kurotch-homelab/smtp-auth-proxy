@@ -16,6 +16,9 @@ import (
 // The body is not included. It is somebody's mail, and downloading it is a
 // separate endpoint behind a separate permission.
 type messageResponse struct {
+	SMTPAccountID   string   `json:"smtpAccountId,omitempty"`
+	MailboxID       string   `json:"mailboxId,omitempty"`
+	Origin          string   `json:"origin"`
 	ID              string   `json:"id"`
 	AccountUsername string   `json:"accountUsername,omitempty"`
 	MailboxAddress  string   `json:"mailboxAddress,omitempty"`
@@ -42,7 +45,7 @@ type messageResponse struct {
 
 func toMessageResponse(m *store.Message) messageResponse {
 	resp := messageResponse{
-		ID: m.ID, AccountUsername: m.AccountUsername, MailboxAddress: m.MailboxAddress,
+		ID: m.ID, SMTPAccountID: m.SMTPAccountID.String, MailboxID: m.MailboxID.String, Origin: m.Origin, AccountUsername: m.AccountUsername, MailboxAddress: m.MailboxAddress,
 		EnvelopeFrom: m.EnvelopeFrom, HeaderFrom: m.HeaderFrom,
 		Recipients: m.Recipients, RecipientCount: m.RecipientCount,
 		SizeBytes: m.SizeBytes, Subject: m.Subject, MessageID: m.MessageID,

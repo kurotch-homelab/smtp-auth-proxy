@@ -1,5 +1,7 @@
+import { ConfirmProvider } from './components/Confirm'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { FluentProvider, webLightTheme } from '@fluentui/react-components'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { Layout } from './components/Layout'
 import { Spinner } from './components/ui'
@@ -27,13 +29,17 @@ const queryClient = new QueryClient({
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <BrowserRouter>
-          <Routed />
-        </BrowserRouter>
-      </SessionProvider>
-    </QueryClientProvider>
+    <FluentProvider theme={webLightTheme} className="app-theme">
+      <QueryClientProvider client={queryClient}>
+        <SessionProvider>
+          <BrowserRouter>
+            <ConfirmProvider>
+              <Routed />
+            </ConfirmProvider>
+          </BrowserRouter>
+        </SessionProvider>
+      </QueryClientProvider>
+    </FluentProvider>
   )
 }
 
@@ -63,7 +69,8 @@ function Routed() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="/queue" element={<QueuePage />} />
+        <Route path="/queue" element={<LegacyQueue />} />
+        <Route path="/messages" element={<QueuePage />} />
         <Route path="/accounts" element={<AccountsPage />} />
         <Route path="/mailboxes" element={<MailboxesPage />} />
         <Route path="/credentials" element={<CredentialsPage />} />
@@ -76,4 +83,9 @@ function Routed() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
+}
+
+function LegacyQueue() {
+  const location = useLocation()
+  return <Navigate to={`/messages${location.search}`} replace />
 }

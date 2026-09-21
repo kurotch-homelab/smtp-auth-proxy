@@ -1,3 +1,9 @@
+import { useListView } from '@/lib/useListView'
+import { ActionsMenu } from '@/components/ActionsMenu'
+import { DetailLink as Link } from '@/components/DetailLink'
+import { ResourceDetails } from '@/components/ResourceDetails'
+import { useConfirm } from '@/components/Confirm'
+import { Textarea } from '@fluentui/react-components'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -52,9 +58,14 @@ function splitList(value: string): string[] {
 
 export function AccountsPage() {
   const { can } = useSession()
+  const confirm = useConfirm()
   const queryClient = useQueryClient()
 
   const accounts = useQuery({ queryKey: ['accounts'], queryFn: () => api.accounts.list() })
+  const list = useListView(
+    accounts.data?.items,
+    (a) => `${a.username} ${a.description ?? ''} ${a.mailboxAddresses.join(' ')}`,
+  )
   const mailboxes = useQuery({ queryKey: ['mailboxes'], queryFn: () => api.mailboxes.list() })
 
   const [editing, setEditing] = useState<Account | 'new' | undefined>()
@@ -127,6 +138,12 @@ export function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ResourceDetails
+        kind="accounts"
+        onEdit={async (id) => {
+          openEditor(await api.accounts.get(id))
+        }}
+      />
       <Card
         title="SMTP accounts"
         actions={
@@ -147,6 +164,7 @@ export function AccountsPage() {
           others.
         </p>
 
+        {list.controls}
         {accounts.isLoading ? (
           <Spinner />
         ) : accounts.error ? (
@@ -159,25 +177,23 @@ export function AccountsPage() {
         ) : (
           <>
             <ErrorNotice error={remove.error} className="mb-3" />
-            <Table headers={['Username', 'Sends as', 'Sender policy', 'Last used', 'State', '']}>
-              {accounts.data?.items.map((a) => (
+            <Table headers={['Username', 'Available mailboxes', 'Last used', 'State', '']}>
+              {list.items.map((a) => (
                 <Row key={a.id}>
                   <Cell>
+                    <Link to={list.detailUrl(a.id)}>Details</Link>
                     <span className="font-medium">{a.username}</span>
                     {a.description && <p className="text-xs text-ink-muted">{a.description}</p>}
                   </Cell>
                   <Cell>{a.mailboxAddresses.join(', ') || '—'}</Cell>
-                  <Cell>
-                    <Badge>{a.fromPolicy}</Badge>
-                  </Cell>
                   <Cell className="whitespace-nowrap">{formatRelative(a.lastUsedAt)}</Cell>
                   <Cell>
                     {a.enabled ? <Badge tone="success">enabled</Badge> : <Badge>disabled</Badge>}
-                    {a.managedBy === 'bootstrap' && <Badge tone="accent">bootstrap</Badge>}
+                    {a.managedBy === 'bootstrap' && <Badge tone="accent">Configuration file</Badge>}
                   </Cell>
                   <Cell>
                     {can('accounts.manage') && a.managedBy !== 'bootstrap' && (
-                      <div className="flex flex-wrap gap-1">
+                      <ActionsMenu>
                         <Button
                           variant="ghost"
                           onClick={() => {
@@ -190,13 +206,15 @@ export function AccountsPage() {
                           variant="ghost"
                           busy={resetPassword.isPending}
                           onClick={() => {
-                            if (
-                              confirm(
-                                `Reset the password for ${a.username}? The device stops working until it is reconfigured.`,
-                              )
-                            ) {
-                              resetPassword.mutate(a)
-                            }
+                            void (async () => {
+                              if (
+                                await confirm(
+                                  `Reset the password for ${a.username}? The device stops working until it is reconfigured.`,
+                                )
+                              ) {
+                                resetPassword.mutate(a)
+                              }
+                            })()
                           }}
                         >
                           Reset password
@@ -212,14 +230,16 @@ export function AccountsPage() {
                         <Button
                           variant="ghost"
                           onClick={() => {
-                            if (confirm(`Delete ${a.username}? This cannot be undone.`)) {
-                              remove.mutate(a.id)
-                            }
+                            void (async () => {
+                              if (await confirm(`Delete ${a.username}? This cannot be undone.`)) {
+                                remove.mutate(a.id)
+                              }
+                            })()
                           }}
                         >
                           Delete
                         </Button>
-                      </div>
+                      </ActionsMenu>
                     )}
                   </Cell>
                 </Row>
@@ -345,10 +365,10 @@ export function AccountsPage() {
             error={fieldErrors.allowedSenders}
             hint="One per line: an exact address, or *@example.com for a whole domain."
           >
-            <textarea
+            <Textarea
               id="acct-senders"
               rows={3}
-              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm"
+
               value={form.allowedSenders}
               onChange={(e) => {
                 setForm({ ...form, allowedSenders: e.target.value })
@@ -362,10 +382,10 @@ export function AccountsPage() {
             error={fieldErrors.allowCidrs}
             hint="One CIDR per line, e.g. 10.0.0.0/8. Empty allows any source address."
           >
-            <textarea
+            <Textarea
               id="acct-cidrs"
               rows={2}
-              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm"
+
               value={form.allowCidrs}
               onChange={(e) => {
                 setForm({ ...form, allowCidrs: e.target.value })

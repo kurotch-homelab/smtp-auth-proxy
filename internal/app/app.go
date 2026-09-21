@@ -158,6 +158,8 @@ func (a *App) buildAdmin(ctx context.Context) error {
 		OIDCClient:     oidcClient,
 		Tokens:         a.tokens,
 		SMTPScope:      a.cfg.Upstream.OAuth.SMTPScope,
+		SMTPEndpoint:   fmt.Sprintf("%s:%d", a.cfg.Upstream.SMTP.Host, a.cfg.Upstream.SMTP.Port),
+		GraphEndpoint:  a.cfg.Upstream.Graph.Endpoint,
 		GraphScope:     a.cfg.Upstream.OAuth.GraphScope,
 		TrustedProxies: a.cfg.Admin.TrustedProxies,
 		CookieSecure:   a.cookieSecure(),

@@ -14,7 +14,7 @@ func TestPermissionMatrix(t *testing.T) {
 	expected := map[store.Role][]Permission{
 		store.RoleViewer: {PermViewStatus, PermViewConfig},
 		store.RoleOperator: {
-			PermViewStatus, PermViewConfig, PermViewAudit, PermManageQueue,
+			PermViewStatus, PermViewConfig, PermViewAudit, PermManageQueue, PermRunDiagnostics,
 		},
 		store.RoleAdmin: AllPermissions(),
 	}

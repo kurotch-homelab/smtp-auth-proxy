@@ -193,3 +193,7 @@ $(TOOLS_DIR)/actionlint:
 
 .PHONY: tools
 tools: $(TOOLS_DIR)/golangci-lint $(TOOLS_DIR)/gofumpt $(TOOLS_DIR)/actionlint ## Install pinned dev tools into bin/tools
+
+.PHONY: licenses
+licenses: web/node_modules ## Regenerate tracked distribution license notices
+	node tools/licenses/generate.mjs

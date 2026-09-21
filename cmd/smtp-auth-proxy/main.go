@@ -49,6 +49,7 @@ func commands() []command {
 		{"genkey", "Generate an encryption key for secrets at rest", runGenkey},
 		{"passwd", "Hash an SMTP account password (generates one if omitted)", runPasswd},
 		{"healthcheck", "Probe the running proxy's readiness endpoint", runHealthcheck},
+		{"licenses", "Print distribution license notices", runLicenses},
 		{"version", "Print build information", runVersion},
 	}
 }

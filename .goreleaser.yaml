@@ -21,7 +21,14 @@ builds:
 
 archives:
   - formats: [tar.gz]
-    files: [LICENSE, NOTICE, README.md, config.example.yaml]
+    files:
+      - LICENSE
+      - NOTICE
+      - README.md
+      - config.example.yaml
+      - src: internal/legal/THIRD_PARTY_NOTICES.txt
+        dst: .
+        strip_parent: true
 
 checksum:
   name_template: checksums.txt

@@ -608,3 +608,44 @@ func TestRunnerPurgeIsSkippedWithoutRetention(t *testing.T) {
 		t.Errorf("a message was purged even though retention was not configured: %v", err)
 	}
 }
+
+func TestDiagnosticMessagesUseNormalDeliveryAndRetry(t *testing.T) {
+	for _, mode := range []store.Transport{store.TransportSMTP, store.TransportGraph} {
+		for _, scenario := range []string{"accepted", "retry", "permanent"} {
+			t.Run(string(mode)+"/"+scenario, func(t *testing.T) {
+				db, mb := fixtures(t)
+				mb.Transport = mode
+				if err := db.Mailboxes().Update(t.Context(), mb); err != nil {
+					t.Fatal(err)
+				}
+				m := &store.Message{MailboxAddress: mb.Address, EnvelopeFrom: mb.Address, Recipients: []string{"ops@example.net"}}
+				id, _, err := db.Messages().EnqueueDiagnostic(t.Context(), "actor", store.NewID(), mb.ID, "ops@example.net", m, []byte("Subject: test\r\n\r\ndiagnostic"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				tr := &recordingTransport{}
+				expected := store.StatusSent
+				if scenario == "retry" {
+					tr.err = transport.NewTransient("4.3.2", "Try later", nil)
+					tr.failFirst = 1
+				}
+				if scenario == "permanent" {
+					tr.err = transport.NewPermanent("5.1.1", "Unknown recipient", nil)
+					expected = store.StatusFailed
+				}
+				run(t, runner(t, db, tr, func(o *queue.Options) { o.Transports = map[store.Transport]transport.Transport{mode: tr} }))
+				waitFor(t, "diagnostic delivery outcome", func() bool { return statusOf(t, db, id) == expected })
+				final, err := db.Messages().Get(t.Context(), id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if final.Origin != "diagnostic" || final.SMTPAccountID.Valid {
+					t.Fatal("diagnostic identity changed")
+				}
+				if scenario == "retry" && final.Attempts != 2 {
+					t.Errorf("attempts=%d", final.Attempts)
+				}
+			})
+		}
+	}
+}

@@ -1,3 +1,8 @@
+import { ActionsMenu } from '@/components/ActionsMenu'
+import { DetailLink as Link } from '@/components/DetailLink'
+import { ResourceDetails } from '@/components/ResourceDetails'
+import { useListView } from '@/lib/useListView'
+import { useConfirm } from '@/components/Confirm'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -37,11 +42,15 @@ const emptyForm: UserForm = {
 }
 
 export function UsersPage() {
+  const confirm = useConfirm()
   const { session } = useSession()
   const queryClient = useQueryClient()
 
   const users = useQuery({ queryKey: ['users'], queryFn: () => api.users.list() })
+  const list = useListView(users.data?.items, (u) => `${u.username} ${u.email ?? ''} ${u.role}`)
 
+  const [passwordFor, setPasswordFor] = useState<User>()
+  const [newPassword, setNewPassword] = useState('')
   const [editing, setEditing] = useState<User | 'new' | undefined>()
   const [form, setForm] = useState<UserForm>(emptyForm)
 
@@ -64,6 +73,10 @@ export function UsersPage() {
   const setPassword = useMutation({
     mutationFn: ({ id, password }: { id: string; password: string }) =>
       api.users.setPassword(id, password),
+    onSuccess: () => {
+      setPasswordFor(undefined)
+      setNewPassword('')
+    },
   })
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fields : {}
@@ -97,8 +110,14 @@ export function UsersPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ResourceDetails
+        kind="users"
+        onEdit={async (id) => {
+          openEditor(await api.users.get(id))
+        }}
+      />
       <Card
-        title="Administrators"
+        title="All users"
         actions={
           <Button
             variant="primary"
@@ -110,6 +129,7 @@ export function UsersPage() {
           </Button>
         }
       >
+        {list.controls}
         {users.isLoading ? (
           <Spinner />
         ) : users.error ? (
@@ -118,9 +138,10 @@ export function UsersPage() {
           <>
             <ErrorNotice error={remove.error} className="mb-3" />
             <Table headers={['User', 'Role', 'Source', 'Last sign-in', 'State', '']}>
-              {users.data?.items.map((u) => (
+              {list.items.map((u) => (
                 <Row key={u.id}>
                   <Cell>
+                    <Link to={list.detailUrl(u.id)}>Details</Link>
                     <span className="font-medium">{u.displayName ?? u.username}</span>
                     <p className="text-xs text-ink-muted">
                       {u.username}
@@ -140,7 +161,7 @@ export function UsersPage() {
                     )}
                   </Cell>
                   <Cell>
-                    <div className="flex flex-wrap gap-1">
+                    <ActionsMenu>
                       <Button
                         variant="ghost"
                         onClick={() => {
@@ -149,6 +170,17 @@ export function UsersPage() {
                       >
                         Edit
                       </Button>
+                      {u.source === 'local' && (
+                        <Button
+                          onClick={() => {
+                            setPassword.reset()
+                            setNewPassword('')
+                            setPasswordFor(u)
+                          }}
+                        >
+                          Set password
+                        </Button>
+                      )}
                       {u.id !== session?.user.id && (
                         <>
                           <Button
@@ -162,16 +194,16 @@ export function UsersPage() {
                           <Button
                             variant="ghost"
                             onClick={() => {
-                              if (confirm(`Delete ${u.username}?`)) {
-                                remove.mutate(u.id)
-                              }
+                              void confirm(`Delete ${u.username}?`).then((ok) => {
+                                if (ok) remove.mutate(u.id)
+                              })
                             }}
                           >
                             Delete
                           </Button>
                         </>
                       )}
-                    </div>
+                    </ActionsMenu>
                   </Cell>
                 </Row>
               ))}
@@ -266,42 +298,9 @@ export function UsersPage() {
                 }}
               />
             </Field>
-          ) : (
-            editing &&
-            editing.source === 'local' && (
-              <Field
-                label="Set a new password"
-                htmlFor="user-password"
-                hint="Leave empty to keep the current one. Setting it signs the user out everywhere."
-              >
-                <div className="flex gap-2">
-                  <Input
-                    id="user-password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={12}
-                    value={form.password}
-                    onChange={(e) => {
-                      setForm({ ...form, password: e.target.value })
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    busy={setPassword.isPending}
-                    disabled={form.password.length < 12}
-                    onClick={() => {
-                      setPassword.mutate({ id: editing.id, password: form.password })
-                    }}
-                  >
-                    Set
-                  </Button>
-                </div>
-              </Field>
-            )
-          )}
+          ) : null}
 
           <ErrorNotice error={save.error} />
-          <ErrorNotice error={setPassword.error} />
 
           <div className="flex justify-end gap-2">
             <Button
@@ -317,6 +316,41 @@ export function UsersPage() {
               {editing === 'new' ? 'Create' : 'Save'}
             </Button>
           </div>
+        </form>
+      </Modal>
+      <Modal
+        open={!!passwordFor}
+        title={`Set password — ${passwordFor?.username ?? ''}`}
+        onClose={() => {
+          setPasswordFor(undefined)
+          setNewPassword('')
+        }}
+      >
+        <p className="mb-4">Setting a new password signs this user out everywhere.</p>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (passwordFor) setPassword.mutate({ id: passwordFor.id, password: newPassword })
+          }}
+        >
+          <Field label="New password" htmlFor="reset-user-password">
+            <Input
+              id="reset-user-password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={12}
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value)
+              }}
+            />
+          </Field>
+          <ErrorNotice error={setPassword.error} />
+          <Button type="submit" variant="primary" busy={setPassword.isPending}>
+            Set password
+          </Button>
         </form>
       </Modal>
     </div>

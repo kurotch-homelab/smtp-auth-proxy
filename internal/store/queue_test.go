@@ -435,7 +435,7 @@ func TestHoldAndRequeue(t *testing.T) {
 	}
 }
 
-func TestRequeueRecoversAStuckSendingMessage(t *testing.T) {
+func TestRequeueRejectsAnActiveSendingMessage(t *testing.T) {
 	t.Parallel()
 
 	db := storetest.Open(t, store.DriverSQLite)
@@ -446,16 +446,16 @@ func TestRequeueRecoversAStuckSendingMessage(t *testing.T) {
 	if _, err := db.Messages().ClaimMessages(t.Context(), "wedged", 1, 24*time.Hour); err != nil {
 		t.Fatalf("ClaimMessages: %v", err)
 	}
-	// An operator must be able to rescue it from the admin UI without waiting.
-	if err := db.Messages().Requeue(t.Context(), m.ID); err != nil {
+	// Only expiry recovery may release an active worker lease.
+	if err := db.Messages().Requeue(t.Context(), m.ID); !errors.Is(err, store.ErrStateConflict) {
 		t.Fatalf("Requeue of a sending message: %v", err)
 	}
 	got, err := db.Messages().Get(t.Context(), m.ID)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
-	if got.Status != store.StatusQueued || got.LeaseOwner.Valid {
-		t.Errorf("message is %q with lease %+v, want queued and unleased", got.Status, got.LeaseOwner)
+	if got.Status != store.StatusSending || !got.LeaseOwner.Valid {
+		t.Errorf("message is %q with lease %+v, want sending and leased", got.Status, got.LeaseOwner)
 	}
 }
 

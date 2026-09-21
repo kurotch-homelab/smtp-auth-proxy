@@ -33,8 +33,12 @@ type harnessOption func(*adminapi.Options)
 
 func newHarness(t *testing.T, opts ...harnessOption) *harness {
 	t.Helper()
+	return newHarnessForDriver(t, store.DriverSQLite, opts...)
+}
 
-	db := storetest.Open(t, store.DriverSQLite)
+func newHarnessForDriver(t *testing.T, driver string, opts ...harnessOption) *harness {
+	t.Helper()
+	db := storetest.Open(t, driver)
 
 	spec, err := appcrypto.GenerateKey("k1")
 	if err != nil {

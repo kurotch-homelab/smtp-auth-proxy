@@ -14,6 +14,7 @@ import (
 
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/adminauth"
 	appcrypto "github.com/kurotch-homelab/smtp-auth-proxy/internal/crypto"
+	"github.com/kurotch-homelab/smtp-auth-proxy/internal/legal"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/metrics"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/oauth"
 	"github.com/kurotch-homelab/smtp-auth-proxy/internal/store"
@@ -37,8 +38,10 @@ type Options struct {
 	// credential take effect without a restart.
 	Tokens *oauth.Provider
 	// SMTPScope and GraphScope are what the connection test asks for.
-	SMTPScope  string
-	GraphScope string
+	SMTPEndpoint  string
+	GraphEndpoint string
+	SMTPScope     string
+	GraphScope    string
 
 	// TrustedProxies are the networks whose X-Forwarded-For is believed.
 	TrustedProxies []string
@@ -62,13 +65,15 @@ type Server struct {
 	db      *store.DB
 	keyring *appcrypto.Keyring
 
-	sessions   *adminauth.SessionManager
-	local      *adminauth.LocalAuthenticator
-	oidc       *adminauth.OIDCAuthenticator
-	oidcClient *http.Client
-	tokens     *oauth.Provider
-	smtpScope  string
-	graphScope string
+	sessions      *adminauth.SessionManager
+	local         *adminauth.LocalAuthenticator
+	oidc          *adminauth.OIDCAuthenticator
+	oidcClient    *http.Client
+	tokens        *oauth.Provider
+	smtpEndpoint  string
+	graphEndpoint string
+	smtpScope     string
+	graphScope    string
 
 	trustedProxies []*net.IPNet
 	cookieSecure   bool
@@ -111,6 +116,8 @@ func New(opts Options) (*Server, error) {
 		oidcClient:     opts.OIDCClient,
 		tokens:         opts.Tokens,
 		smtpScope:      opts.SMTPScope,
+		smtpEndpoint:   opts.SMTPEndpoint,
+		graphEndpoint:  opts.GraphEndpoint,
 		graphScope:     opts.GraphScope,
 		trustedProxies: trusted,
 		cookieSecure:   opts.CookieSecure,
@@ -147,6 +154,7 @@ func (s *Server) routes() http.Handler {
 
 	// Liveness and readiness are deliberately unauthenticated: a probe has no
 	// credentials, and neither reveals anything about the deployment.
+	r.Get("/licenses", legal.Handler)
 	r.Get("/healthz", s.handleHealthz)
 	r.Get("/readyz", s.handleReadyz)
 
