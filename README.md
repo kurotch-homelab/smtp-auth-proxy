@@ -98,6 +98,8 @@ The admin UI generates these PowerShell commands with your values filled in. Ful
 
 **[日本語の利用ガイド](https://smtp-auth-proxy.pages.silver-vine.jp/)** —
 導入、Microsoft 365 の準備、機器設定、管理画面での診断、バックアップを順に説明します。
+The guide is maintained and deployed from the private
+[`smtp-auth-proxy-docs`](https://github.com/kurotch-homelab/smtp-auth-proxy-docs) repository.
 
 | Guide | What it covers |
 | --- | --- |
