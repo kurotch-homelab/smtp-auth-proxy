@@ -1,0 +1,52 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/site/**', '.github/workflows/pages.yml']
+  pull_request:
+    paths: ['docs/site/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/site/package-lock.json
+      - run: npm ci
+        working-directory: docs/site
+      - run: npm run build
+        working-directory: docs/site
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sv-pages-docs
+          path: docs/site/.vitepress/dist/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+    uses: kurotch-homelab/sv-pages/.github/workflows/deploy.yml@v1
+    with:
+      project-name: smtp-auth-proxy
+      source-dir: docs-dist
+      artifact-name: sv-pages-docs
+      auth-mode: oidc
