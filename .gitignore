@@ -25,9 +25,6 @@ coverage.*
 /web/coverage/
 /web/playwright-report/
 /web/test-results/
-/docs/site/node_modules/
-/docs/site/.vitepress/cache/
-/docs/site/.vitepress/dist/
 
 # Tooling state
 /.serena/

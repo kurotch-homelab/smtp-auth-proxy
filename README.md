@@ -4,10 +4,9 @@ An SMTP relay that lets LAN devices and services which only speak **SMTP-AUTH wi
 username and password** keep sending mail through **Microsoft 365**, which now requires
 **OAuth 2.0**.
 
-Microsoft is retiring Basic authentication for SMTP client submission in Exchange Online;
-see the [current retirement timeline](https://techcommunity.microsoft.com/blog/exchange/updated-exchange-online-smtp-auth-basic-authentication-deprecation-timeline/4489835).
-Multifunction printers, NAS boxes, monitoring agents and
-line-of-business applications may not support OAuth themselves. This
+Microsoft retired Basic authentication for SMTP client submission in Exchange Online on
+**30 April 2026**. Multifunction printers, NAS boxes, monitoring agents and
+line-of-business applications that cannot be updated stop being able to send mail. This
 proxy sits between them and Exchange Online: it accepts an ordinary `AUTH LOGIN` /
 `AUTH PLAIN` submission on your LAN and re-sends the message as the matching **shared
 mailbox** using the OAuth 2.0 client credentials flow.
@@ -95,11 +94,6 @@ The admin UI generates these PowerShell commands with your values filled in. Ful
 [`docs/setup-m365.md`](docs/setup-m365.md).
 
 ## Documentation
-
-**[日本語の利用ガイド](https://smtp-auth-proxy.pages.silver-vine.jp/)** —
-導入、Microsoft 365 の準備、機器設定、管理画面での診断、バックアップを順に説明します。
-The guide is maintained and deployed from the private
-[`smtp-auth-proxy-docs`](https://github.com/kurotch-homelab/smtp-auth-proxy-docs) repository.
 
 | Guide | What it covers |
 | --- | --- |
